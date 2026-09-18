@@ -2785,44 +2785,50 @@ function Game() {
         <div className="game-overlay multiplayer-lobby-overlay">
           <div className="overlay-box multiplayer-lobby-box">
             <p className="multiplayer-kicker">AARU ARENA // DEPLOYMENT</p>
-            <h1>ENTER THE ARENA</h1>
+            <h1>SET UP YOUR DEPLOYMENT</h1>
             <p className="multiplayer-subtitle">
-              CHOOSE A MODE, SET YOUR CALLSIGN, THEN DEPLOY.
+              SET YOUR CALLSIGN, CHOOSE A MODE, THEN DEPLOY.
             </p>
 
-            <input
-              className="leaderboard-name-input multiplayer-input"
-              type="text"
-              maxLength={16}
-              value={playerName}
-              onChange={(event) => {
-                setPlayerName(event.target.value.toUpperCase().slice(0, 16));
-                setMultiplayerError("");
-              }}
-              placeholder="ENTER CALLSIGN"
-            />
-
-            <div className="multiplayer-mode-buttons">
-              <button
-                className={`restart-button ${gameMode === "solo" ? "mode-active" : ""}`}
-                onClick={() => {
-                  setGameMode("solo");
-                  setMultiplayerError("");
-                  disconnectMultiplayer();
-                }}
-              >
-                SOLO
-              </button>
-
-              <button
-                className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
-                onClick={() => {
-                  setGameMode("multiplayer");
+            <div className="lobby-step">
+              <p className="lobby-step-label">01 // CALLSIGN</p>
+              <input
+                className="leaderboard-name-input multiplayer-input"
+                type="text"
+                maxLength={16}
+                value={playerName}
+                onChange={(event) => {
+                  setPlayerName(event.target.value.toUpperCase().slice(0, 16));
                   setMultiplayerError("");
                 }}
-              >
-                MULTIPLAYER
-              </button>
+                placeholder="ENTER CALLSIGN"
+              />
+            </div>
+
+            <div className="lobby-step">
+              <p className="lobby-step-label">02 // GAME MODE</p>
+              <div className="multiplayer-mode-buttons">
+                <button
+                  className={`restart-button ${gameMode === "solo" ? "mode-active" : ""}`}
+                  onClick={() => {
+                    setGameMode("solo");
+                    setMultiplayerError("");
+                    disconnectMultiplayer();
+                  }}
+                >
+                  SOLO
+                </button>
+
+                <button
+                  className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
+                  onClick={() => {
+                    setGameMode("multiplayer");
+                    setMultiplayerError("");
+                  }}
+                >
+                  MULTIPLAYER
+                </button>
+              </div>
             </div>
 
             {gameMode === "multiplayer" && (
@@ -2871,12 +2877,15 @@ function Game() {
               <p className="multiplayer-error">{multiplayerError}</p>
             )}
 
-            <button
-              className="restart-button multiplayer-deploy-button"
-              onClick={startArena}
-            >
-              {gameMode === "solo" ? "START SOLO" : "START MATCH"}
-            </button>
+            <div className="lobby-step lobby-deploy-step">
+              <p className="lobby-step-label">03 // DEPLOY</p>
+              <button
+                className="restart-button multiplayer-deploy-button"
+                onClick={startArena}
+              >
+                START MATCH
+              </button>
+            </div>
 
             <Link className="leaderboard-action" to="/">
               BACK TO MAIN MENU

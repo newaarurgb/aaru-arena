@@ -52,6 +52,22 @@
    INPUTS
 --------------------------------------------------------- */
 
+.lobby-step {
+  width: 100%;
+}
+
+.lobby-step-label {
+  margin: 18px 0 7px !important;
+  color: #00ffff !important;
+  font: 800 10px/1.2 monospace !important;
+  letter-spacing: 2px !important;
+  text-align: left !important;
+}
+
+.lobby-deploy-step {
+  margin-top: 6px;
+}
+
 .multiplayer-input {
   display: block !important;
   width: 100% !important;
