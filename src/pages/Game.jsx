@@ -13,6 +13,33 @@ import Projectile from "../game/Projectile";
 import PowerUp from "../game/PowerUp";
 import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
 
+const DIFFICULTIES = {
+  easy: {
+    name: "EASY",
+    description: "Enemies are easier to defeat",
+    healthMultiplier: 0.65,
+    damageMultiplier: 0.7,
+    defeatHeal: 0,
+    healthDropChance: 0.35,
+  },
+  hard: {
+    name: "HARD",
+    description: "Balanced arena challenge",
+    healthMultiplier: 1,
+    damageMultiplier: 1,
+    defeatHeal: 0,
+    healthDropChance: 0.25,
+  },
+  difficult: {
+    name: "DIFFICULT",
+    description: "Low enemy damage, more recovery",
+    healthMultiplier: 1.1,
+    damageMultiplier: 0.4,
+    defeatHeal: 18,
+    healthDropChance: 0.55,
+  },
+};
+
 class BossEnemy {
   constructor(x, y) {
     this.x=x; this.y=y; this.width=90; this.height=90; this.type="boss";
@@ -188,6 +215,7 @@ function Game() {
   const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [gameMode, setGameMode] = useState("solo");
+  const [difficulty, setDifficulty] = useState("hard");
   const [environment, setEnvironment] = useState(
     () => sessionStorage.getItem("aaruEnvironment") || "neon"
   );
@@ -198,6 +226,8 @@ function Game() {
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
+
+  const difficultySettings = DIFFICULTIES[difficulty] || DIFFICULTIES.hard;
 
   const triggerScreenShake = (amount) => {
     screenShakeRef.current = Math.max(screenShakeRef.current, amount);
@@ -458,8 +488,7 @@ function Game() {
   // =====================================================
 
   function spawnPowerUp(x, y) {
-    // 25% chance
-    if (Math.random() > 0.25) {
+    if (Math.random() > difficultySettings.healthDropChance) {
       return;
     }
 
@@ -481,6 +510,14 @@ function Game() {
         type
       )
     );
+  }
+
+  function applyDifficultyToEnemies(enemies) {
+    enemies.forEach((enemy) => {
+      enemy.maxHealth *= difficultySettings.healthMultiplier;
+      enemy.health = enemy.maxHealth;
+      enemy.damage *= difficultySettings.damageMultiplier;
+    });
   }
 
   // =====================================================
@@ -573,6 +610,14 @@ function Game() {
   // =====================================================
 
   function handleEnemyDefeated() {
+    if (difficultySettings.defeatHeal > 0 && playerRef.current) {
+      playerRef.current.health = Math.min(
+        playerRef.current.maxHealth || 100,
+        playerRef.current.health + difficultySettings.defeatHeal
+      );
+      setHealth(playerRef.current.health);
+    }
+
     triggerScreenShake(3);
     const progression =
       progressionRef.current;
@@ -1352,7 +1397,7 @@ function Game() {
           velocityX: direction.x * 5.2,
           velocityY: direction.y * 5.2,
           radius: 8,
-          damage: 15,
+          damage: 15 * difficultySettings.damageMultiplier,
           life: 220,
           bossShot: true,
         });
@@ -1712,6 +1757,8 @@ function Game() {
           playerRef.current
         );
       }
+
+      applyDifficultyToEnemies(spawnedEnemies);
 
       // Defensive check: Spawner must always return an array.
       if (!Array.isArray(spawnedEnemies)) {
@@ -3015,7 +3062,24 @@ function Game() {
             </div>
 
             <div className="lobby-step loadout-links-step">
-              <p className="lobby-step-label">03 // LOADOUT</p>
+              <p className="lobby-step-label">03 // DIFFICULTY</p>
+              <div className="difficulty-options">
+                {Object.entries(DIFFICULTIES).map(([key, setting]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    className={`difficulty-option ${difficulty === key ? "selected" : ""}`}
+                    onClick={() => setDifficulty(key)}
+                  >
+                    <strong>{setting.name}</strong>
+                    <small>{setting.description}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lobby-step loadout-links-step">
+              <p className="lobby-step-label">04 // LOADOUT</p>
               <div className="loadout-link-grid">
                 <Link className="loadout-link-button" to="/environment">
                   <span>LOADOUT 01</span>
@@ -3079,7 +3143,7 @@ function Game() {
             )}
 
             <div className="lobby-step lobby-deploy-step">
-              <p className="lobby-step-label">04 // DEPLOY</p>
+              <p className="lobby-step-label">05 // DEPLOY</p>
               <button
                 className="restart-button multiplayer-deploy-button"
                 onClick={startArena}

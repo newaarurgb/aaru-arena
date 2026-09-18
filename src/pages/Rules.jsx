@@ -23,6 +23,11 @@ const rules = [
     title: "PREPARE FOR THE BOSS",
     text: "The boss wave brings back the full enemy roster and adds the final boss. Defeat them all to win.",
   },
+  {
+    number: "05",
+    title: "CHOOSE YOUR DIFFICULTY",
+    text: "Easy lowers enemy health and damage. Hard is balanced. Difficult lowers enemy attack power and restores health after every defeat.",
+  },
 ];
 
 const enemies = [
