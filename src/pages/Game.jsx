@@ -1167,16 +1167,38 @@ function Game() {
       dx += joystickX;
       dy += joystickY;
 
-      // Aim opposite to the movement stick for mobile shooting.
+      // Mobile movement automatically targets the closest enemy.
       const aimDistance = 180;
-      mouseRef.current.x =
-        currentPlayer.x +
-        currentPlayer.width / 2 -
-        joystickX * aimDistance;
-      mouseRef.current.y =
-        currentPlayer.y +
-        currentPlayer.height / 2 -
-        joystickY * aimDistance;
+      const playerCenterX =
+        currentPlayer.x + currentPlayer.width / 2;
+      const playerCenterY =
+        currentPlayer.y + currentPlayer.height / 2;
+      let closestEnemy = null;
+      let closestDistance = Infinity;
+
+      enemiesRef.current.forEach((enemy) => {
+        const enemyCenterX = enemy.x + enemy.width / 2;
+        const enemyCenterY = enemy.y + enemy.height / 2;
+        const distance = Math.hypot(
+          enemyCenterX - playerCenterX,
+          enemyCenterY - playerCenterY
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestEnemy = enemy;
+        }
+      });
+
+      if (closestEnemy) {
+        mouseRef.current.x =
+          closestEnemy.x + closestEnemy.width / 2;
+        mouseRef.current.y =
+          closestEnemy.y + closestEnemy.height / 2;
+      } else {
+        mouseRef.current.x = playerCenterX - joystickX * aimDistance;
+        mouseRef.current.y = playerCenterY - joystickY * aimDistance;
+      }
 
       if (Math.abs(touchMoveRef.current.x) > 0.15 || Math.abs(touchMoveRef.current.y) > 0.15) {
         const moveX = joystickX;
