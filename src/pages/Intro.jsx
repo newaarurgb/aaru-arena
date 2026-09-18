@@ -25,28 +25,31 @@ function Intro() {
       const audioContext = new AudioContextClass();
       audioRef.current = audioContext;
       const now = audioContext.currentTime;
-      const notes = [
-        [110, 0, 0.55],
-        [165, 0.5, 0.45],
-        [220, 1.05, 0.45],
-        [330, 1.65, 0.8],
-        [440, 2.55, 1.2],
-      ];
 
-      notes.forEach(([frequency, offset, duration]) => {
+      const arenaTone = (frequency, offset, duration, type, volume, endFrequency) => {
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(frequency, now + offset);
-        oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.8, now + offset + duration);
-        gain.gain.setValueAtTime(0.001, now + offset);
-        gain.gain.linearRampToValueAtTime(0.045, now + offset + 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + duration);
+        const start = now + offset;
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.linearRampToValueAtTime(volume, start + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
-        oscillator.start(now + offset);
-        oscillator.stop(now + offset + duration);
-      });
+        oscillator.start(start);
+        oscillator.stop(start + duration);
+      };
+
+      // Heavy impact, rising alarm, then a command-console confirmation.
+      arenaTone(72, 0, 0.7, "sawtooth", 0.12, 34);
+      arenaTone(115, 0.35, 1.35, "sawtooth", 0.055, 720);
+      arenaTone(260, 1.85, 0.12, "square", 0.045, 180);
+      arenaTone(320, 2.15, 0.12, "square", 0.05, 220);
+      arenaTone(390, 2.45, 0.16, "square", 0.055, 270);
+      arenaTone(90, 2.95, 0.75, "sawtooth", 0.1, 42);
+      arenaTone(620, 3.05, 0.5, "square", 0.045, 1180);
     }
 
     return () => {
