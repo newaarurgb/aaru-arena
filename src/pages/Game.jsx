@@ -1163,6 +1163,9 @@ function Game() {
       const joystickX = touchMoveRef.current.x;
       const joystickY = touchMoveRef.current.y;
 
+      dx += joystickX;
+      dy += joystickY;
+
       // Aim opposite to the movement stick for mobile shooting.
       const aimDistance = 180;
       mouseRef.current.x =
