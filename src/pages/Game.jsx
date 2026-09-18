@@ -97,6 +97,7 @@ function Game() {
   const touchKeysRef = useRef({});
   const shootingRef = useRef(false);
   const lastShotRef = useRef(0);
+  const playerDamageCooldownRef = useRef(0);
   const screenShakeRef = useRef(0);
 
   // =====================================================
@@ -1314,6 +1315,10 @@ function Game() {
       return;
     }
 
+    if (playerDamageCooldownRef.current > 0) {
+      playerDamageCooldownRef.current--;
+    }
+
     enemiesRef.current.forEach((enemy) => {
       enemy.update(currentPlayer, canvas);
 
@@ -1380,7 +1385,8 @@ function Game() {
 
       if (
         distance < 60 &&
-        enemy.hitTimer <= 0
+        enemy.hitTimer <= 0 &&
+        playerDamageCooldownRef.current <= 0
       ) {
         if (shieldRef.current) {
           enemy.hitTimer = 20;
@@ -1406,6 +1412,7 @@ function Game() {
 
         currentPlayer.health -= damage;
         enemy.hitTimer = 45;
+        playerDamageCooldownRef.current = 45;
 
         setHealth(
           Math.max(0, currentPlayer.health)
@@ -2833,6 +2840,9 @@ function Game() {
       false;
 
     lastShotRef.current =
+      0;
+
+    playerDamageCooldownRef.current =
       0;
 
     // -----------------------------------------------------
