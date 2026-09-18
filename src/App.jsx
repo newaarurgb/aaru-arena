@@ -6,6 +6,7 @@ import Leaderboard from "./pages/LeaderBoard";
 import Rules from "./pages/Rules";
 import EnvironmentSelect from "./pages/EnvironmentSelect";
 import StyleSelect from "./pages/StyleSelect";
+import Intro from "./pages/Intro";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/rules" element={<Rules />} />
         <Route path="/environment" element={<EnvironmentSelect />} />
         <Route path="/style" element={<StyleSelect />} />
+        <Route path="/intro" element={<Intro />} />
       </Routes>
     </HashRouter>
   );

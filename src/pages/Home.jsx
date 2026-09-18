@@ -26,7 +26,7 @@ function Home() {
         <div className="home-actions">
           <button
             className="play-button"
-            onClick={() => navigate("/game")}
+            onClick={() => navigate("/intro")}
           >
             <span>▶</span>
             ENTER ARENA
