@@ -97,7 +97,6 @@ function Game() {
   const touchKeysRef = useRef({});
   const shootingRef = useRef(false);
   const lastShotRef = useRef(0);
-  const audioContextRef = useRef(null);
   const screenShakeRef = useRef(0);
 
   // =====================================================
@@ -198,59 +197,6 @@ function Game() {
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
-
-  const playSound = (type) => {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContextClass();
-    }
-
-    const audioContext = audioContextRef.current;
-    if (audioContext.state === "suspended") {
-      audioContext.resume();
-    }
-
-    const sounds = {
-      shoot: { frequency: 920, duration: 0.075, endFrequency: 260, volume: 0.045 },
-      click: { frequency: 720, duration: 0.035, endFrequency: 520, volume: 0.035 },
-      hit: { frequency: 180, duration: 0.06, endFrequency: 90, volume: 0.045 },
-      defeat: { frequency: 110, duration: 0.16, endFrequency: 55, volume: 0.07 },
-      damage: { frequency: 75, duration: 0.18, endFrequency: 42, volume: 0.08 },
-      wave: { frequency: 440, duration: 0.28, endFrequency: 880, volume: 0.07 },
-      level: { frequency: 660, duration: 0.35, endFrequency: 1320, volume: 0.06 },
-      victory: { frequency: 330, duration: 0.7, endFrequency: 990, volume: 0.09 },
-    };
-    const sound = sounds[type] || sounds.hit;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const now = audioContext.currentTime;
-
-    oscillator.type = type === "shoot" ? "square" : type === "click" ? "triangle" : type === "damage" || type === "defeat" ? "sawtooth" : "sine";
-    oscillator.frequency.setValueAtTime(sound.frequency, now);
-    oscillator.frequency.exponentialRampToValueAtTime(sound.endFrequency, now + sound.duration);
-    gain.gain.setValueAtTime(sound.volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + sound.duration);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + sound.duration);
-
-    if (type === "shoot") {
-      const sparkle = audioContext.createOscillator();
-      const sparkleGain = audioContext.createGain();
-      sparkle.type = "sine";
-      sparkle.frequency.setValueAtTime(1800, now);
-      sparkle.frequency.exponentialRampToValueAtTime(700, now + 0.035);
-      sparkleGain.gain.setValueAtTime(0.018, now);
-      sparkleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-      sparkle.connect(sparkleGain);
-      sparkleGain.connect(audioContext.destination);
-      sparkle.start(now);
-      sparkle.stop(now + 0.035);
-    }
-  };
 
   const triggerScreenShake = (amount) => {
     screenShakeRef.current = Math.max(screenShakeRef.current, amount);
@@ -385,7 +331,6 @@ function Game() {
   };
 
   const startArena = () => {
-    playSound("click");
     const cleanName = playerName.trim().slice(0, 16);
 
     if (!cleanName) {
@@ -627,7 +572,6 @@ function Game() {
   // =====================================================
 
   function handleEnemyDefeated() {
-    playSound("defeat");
     triggerScreenShake(3);
     const progression =
       progressionRef.current;
@@ -661,7 +605,6 @@ function Game() {
     );
 
     if (leveledUp) {
-      playSound("level");
       levelUpRef.current = true;
 
       setLevelUp(true);
@@ -669,7 +612,6 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
-    playSound("victory");
     triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
@@ -696,7 +638,6 @@ function Game() {
     damage,
     dead = false
   ) {
-    playSound(dead ? "defeat" : "hit");
     if (dead) triggerScreenShake(5);
     // -----------------------------------------------------
     // DAMAGE NUMBER
@@ -2302,7 +2243,6 @@ function Game() {
           mouseRef.current.y
         );
 
-      playSound("shoot");
 
       // =================================================
       // DAMAGE BOOST
@@ -2471,7 +2411,6 @@ function Game() {
             if (distance < 28) {
               if (!shieldRef.current) {
                 player.health -= bullet.damage || 12;
-                playSound("damage");
                 triggerScreenShake(4);
 
                 setHealth(
@@ -2672,7 +2611,6 @@ function Game() {
         setHealth(playerRef.current.health);
         setWaveCleared(true);
 
-        playSound("wave");
         triggerScreenShake(7);
 
         shootingRef.current = false;
@@ -2700,11 +2638,6 @@ function Game() {
     return () => {
       shootingRef.current = false;
       canvas.style.transform = "";
-
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
 
       cancelAnimationFrame(
         animationRef.current
@@ -3059,7 +2992,6 @@ function Game() {
                 <button
                   className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
                   onClick={() => {
-                    playSound("click");
                     setGameMode("multiplayer");
                     setMultiplayerError("");
                   }}
@@ -3110,7 +3042,6 @@ function Game() {
                 <button
                   className="restart-button connect-room-button"
                   onClick={() => {
-                    playSound("click");
                     connectMultiplayer();
                   }}
                 >
@@ -3348,7 +3279,6 @@ function Game() {
             className="pause-button"
             type="button"
             onClick={() => {
-              playSound("click");
               setPaused((value) => {
                 shootingRef.current = value;
                 return !value;
@@ -3368,7 +3298,6 @@ function Game() {
                   className="restart-button"
                   type="button"
                   onClick={() => {
-                    playSound("click");
                     setPaused(false);
                   }}
                 >
@@ -3592,7 +3521,6 @@ function Game() {
 
                 <button
                   onClick={() => {
-                    playSound("click");
                     applyPowerUpgrade();
                   }}
                 >
@@ -3607,7 +3535,6 @@ function Game() {
 
                 <button
                   onClick={() => {
-                    playSound("click");
                     applySpeedUpgrade();
                   }}
                 >
@@ -3622,7 +3549,6 @@ function Game() {
 
                 <button
                   onClick={() => {
-                    playSound("click");
                     applyVitalityUpgrade();
                   }}
                 >
