@@ -1053,17 +1053,15 @@ body {
 @media (max-width: 650px) {
   .mobile-controls {
     position: fixed;
-    left: 12px;
-    bottom: 34vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    width: auto;
+    width: 200px;
+    height: 200px;
     margin: 0;
-    gap: 12px;
     touch-action: none;
-    padding-bottom: 4px;
     z-index: 30;
+    padding: 15px;
   }
 
   .controls {

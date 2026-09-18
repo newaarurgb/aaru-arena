@@ -162,6 +162,8 @@ function Game() {
   const [attackEffect, setAttackEffect] = useState(false);
 
   const [powerUpMessage, setPowerUpMessage] = useState("");
+  const [joystickPos, setJoystickPos] = useState({ x: 18, y: window.innerHeight * 0.58 });
+  const joystickDragRef = useRef({ active: false, pointerId: null, startX: 0, startY: 0, originX: 18, originY: window.innerHeight * 0.58 });
 
   // =====================================================
   // LEADERBOARD
@@ -3039,7 +3041,50 @@ function Game() {
           MOBILE CONTROLS
       ================================================= */}
 
-      <div className="mobile-controls">
+      <div
+        className="mobile-controls"
+        style={{ left: `${joystickPos.x}px`, top: `${joystickPos.y}px` }}
+        onPointerDown={(event) => {
+          const target = event.target;
+          if (target instanceof HTMLElement && target.closest(".mobile-joystick")) {
+            return;
+          }
+
+          joystickDragRef.current = {
+            active: true,
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: joystickPos.x,
+            originY: joystickPos.y,
+          };
+
+          event.currentTarget.setPointerCapture(event.pointerId);
+          event.preventDefault();
+        }}
+        onPointerMove={(event) => {
+          if (!joystickDragRef.current.active || event.pointerId !== joystickDragRef.current.pointerId) {
+            return;
+          }
+
+          const dx = event.clientX - joystickDragRef.current.startX;
+          const dy = event.clientY - joystickDragRef.current.startY;
+
+          setJoystickPos({
+            x: Math.max(8, Math.min(window.innerWidth - 180, joystickDragRef.current.originX + dx)),
+            y: Math.max(80, Math.min(window.innerHeight - 180, joystickDragRef.current.originY + dy)),
+          });
+        }}
+        onPointerUp={(event) => {
+          joystickDragRef.current = { active: false, pointerId: null, startX: 0, startY: 0, originX: joystickPos.x, originY: joystickPos.y };
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }}
+        onPointerLeave={(event) => {
+          if (joystickDragRef.current.active && event.pointerId === joystickDragRef.current.pointerId) {
+            joystickDragRef.current = { active: false, pointerId: null, startX: 0, startY: 0, originX: joystickPos.x, originY: joystickPos.y };
+          }
+        }}
+      >
         <div
           className={`mobile-joystick ${touchMoveRef.current.active ? "active" : ""}`}
           onPointerDown={(event) => {
@@ -3068,6 +3113,7 @@ function Game() {
 
             base.setPointerCapture(event.pointerId);
             event.preventDefault();
+            event.stopPropagation();
           }}
           onPointerMove={(event) => {
             if (!touchMoveRef.current.active) return;
@@ -3103,6 +3149,7 @@ function Game() {
             }
             event.currentTarget.releasePointerCapture(event.pointerId);
             event.preventDefault();
+            event.stopPropagation();
           }}
           onPointerLeave={(event) => {
             if (!touchMoveRef.current.active) return;
@@ -3120,6 +3167,7 @@ function Game() {
               knob.style.transform = "translate(0px, 0px)";
             }
             event.preventDefault();
+            event.stopPropagation();
           }}
         >
           <div className="joystick-knob" />
