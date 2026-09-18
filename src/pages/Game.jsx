@@ -2907,7 +2907,9 @@ function Game() {
           </span>
 
           <span>
-            {wave >= 5 && !victory ? "BOSS BATTLE" : `ENEMIES ${enemiesLeft}`}
+            {wave >= 5 && !victory
+              ? `BOSS BATTLE | ENEMIES ${enemiesLeft}`
+              : `ENEMIES ${enemiesLeft}`}
           </span>
 
         </div>
