@@ -234,6 +234,8 @@ function Game() {
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
 
+  const profile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+
   const difficultySettings = DIFFICULTIES[difficulty] || DIFFICULTIES.hard;
 
   const triggerScreenShake = (amount) => {
@@ -295,6 +297,7 @@ function Game() {
             type: "join_room",
             room: cleanRoom,
             name: cleanName,
+            avatar: profile.avatar || 1,
           })
         );
 
@@ -1710,7 +1713,9 @@ function Game() {
         new Player(
           canvas.width / 2 - 20,
           canvas.height / 2 - 20,
-          playerDesign
+          playerDesign,
+          playerName || profile.displayName || "PILOT",
+          profile.avatar || 1
         );
 
       playerRef.current =
@@ -2364,7 +2369,10 @@ function Game() {
         context.fillStyle = "#00ffff";
         context.font = "700 11px monospace";
         context.textAlign = "center";
-        context.fillText((remotePlayer.name || "PLAYER").slice(0, 12), 0, -28);
+        context.fillText((remotePlayer.name || "PLAYER").slice(0, 14), 0, -30);
+        context.font = "9px monospace";
+        context.fillStyle = "#ffffff";
+        context.fillText(`AVATAR ${remotePlayer.avatar || 1}`, 0, -18);
         context.restore();
       });
     }
@@ -2421,6 +2429,8 @@ function Game() {
                   x: currentPlayer.x,
                   y: currentPlayer.y,
                   health: currentPlayer.health,
+                  name: currentPlayer.displayName,
+                  avatar: currentPlayer.avatar,
                 })
               );
             }

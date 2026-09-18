@@ -53,7 +53,7 @@ server.on("connection", (socket) => {
       const code = createRoomCode();
       room = { code, hostId: playerId, started: false, players: [] };
       rooms.set(code, room);
-      player = { id: playerId, name: String(message.name || "PLAYER").slice(0, 16), x: 0, y: 0, health: 100, socket };
+      player = { id: playerId, name: String(message.name || "PLAYER").slice(0, 16), avatar: Number(message.avatar) || 1, x: 0, y: 0, health: 100, socket };
       room.players.push(player);
       send(socket, { type: "room_created", room: code, hostId: playerId });
       broadcastRoom(room);
@@ -72,7 +72,7 @@ server.on("connection", (socket) => {
         return;
       }
       room = targetRoom;
-      player = { id: playerId, name: String(message.name || "PLAYER").slice(0, 16), x: 0, y: 0, health: 100, socket };
+      player = { id: playerId, name: String(message.name || "PLAYER").slice(0, 16), avatar: Number(message.avatar) || 1, x: 0, y: 0, health: 100, socket };
       room.players.push(player);
       broadcastRoom(room);
       return;
@@ -94,7 +94,7 @@ server.on("connection", (socket) => {
       player.y = Number(message.y) || 0;
       player.health = Number(message.health) || 0;
       room.players.forEach((member) => {
-        if (member.id !== playerId) send(member.socket, { type: "player_update", player: { id: player.id, name: player.name, x: player.x, y: player.y, health: player.health } });
+        if (member.id !== playerId) send(member.socket, { type: "player_update", player: { id: player.id, name: player.name, avatar: player.avatar, x: player.x, y: player.y, health: player.health } });
       });
     }
   });

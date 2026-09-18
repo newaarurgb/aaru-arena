@@ -36,7 +36,8 @@ function MultiplayerLobby() {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      socket.send(JSON.stringify({ ...message, name: cleanName }));
+      const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+      socket.send(JSON.stringify({ ...message, name: cleanName, avatar: savedProfile.avatar || 1 }));
     };
 
     socket.onmessage = (event) => {

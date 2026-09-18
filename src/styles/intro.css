@@ -97,10 +97,10 @@
   padding: 22px;
   box-sizing: border-box;
   border: 1px solid rgba(0,245,255,0.45);
-  background: rgba(2, 5, 11, 0.86);
+  background: rgba(2, 5, 11, 0.38);
   box-shadow: 0 0 32px rgba(0,245,255,0.14);
   transform: translateY(-50%);
-  backdrop-filter: blur(9px);
+  backdrop-filter: blur(3px);
 }
 
 .intro-auth-kicker,

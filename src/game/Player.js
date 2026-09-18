@@ -1,5 +1,5 @@
 class Player {
-  constructor(x, y, design = "aqua") {
+  constructor(x, y, design = "aqua", displayName = "PILOT", avatar = 1) {
     this.x = x;
     this.y = y;
 
@@ -16,6 +16,8 @@ class Player {
     // Direction the player is facing
     this.direction = "down";
     this.design = design;
+    this.displayName = displayName;
+    this.avatar = avatar;
 
     // Attack settings
     this.attackRange = 75;
@@ -97,6 +99,18 @@ class Player {
       frost: { body: "#baf5ff", core: "#ffffff", accent: "#5c9dff" },
     };
     const colors = designs[this.design] || designs.aqua;
+
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.font = "700 11px monospace";
+    ctx.fillStyle = colors.accent;
+    ctx.shadowColor = colors.accent;
+    ctx.shadowBlur = 8;
+    ctx.fillText((this.displayName || "PILOT").slice(0, 14), this.x + this.width / 2, this.y - 22);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "9px monospace";
+    ctx.fillText(`AVATAR ${this.avatar || 1}`, this.x + this.width / 2, this.y - 10);
+    ctx.restore();
 
     // Player body
     ctx.fillStyle = colors.body;
