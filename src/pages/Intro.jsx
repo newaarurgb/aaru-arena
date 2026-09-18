@@ -42,14 +42,20 @@ function Intro() {
         oscillator.stop(start + duration);
       };
 
-      // Heavy impact, rising alarm, then a command-console confirmation.
-      arenaTone(72, 0, 0.7, "sawtooth", 0.12, 34);
-      arenaTone(115, 0.35, 1.35, "sawtooth", 0.055, 720);
-      arenaTone(260, 1.85, 0.12, "square", 0.045, 180);
-      arenaTone(320, 2.15, 0.12, "square", 0.05, 220);
-      arenaTone(390, 2.45, 0.16, "square", 0.055, 270);
-      arenaTone(90, 2.95, 0.75, "sawtooth", 0.1, 42);
-      arenaTone(620, 3.05, 0.5, "square", 0.045, 1180);
+      // Space-war launch: engine rumble, weapon lock, plasma bursts, impact.
+      arenaTone(48, 0, 1.25, "sawtooth", 0.13, 28);
+      arenaTone(82, 0.18, 1.1, "triangle", 0.08, 42);
+      arenaTone(920, 0.95, 0.07, "square", 0.06, 1460);
+      arenaTone(1140, 1.18, 0.07, "square", 0.06, 1720);
+      arenaTone(1360, 1.41, 0.08, "square", 0.065, 1960);
+      arenaTone(180, 1.75, 0.22, "sawtooth", 0.08, 52);
+      arenaTone(620, 2.02, 0.09, "square", 0.065, 240);
+      arenaTone(760, 2.17, 0.09, "square", 0.065, 280);
+      arenaTone(900, 2.32, 0.1, "square", 0.07, 320);
+      arenaTone(1080, 2.47, 0.11, "square", 0.075, 380);
+      arenaTone(55, 2.8, 1.15, "sawtooth", 0.15, 24);
+      arenaTone(130, 2.86, 0.8, "triangle", 0.09, 34);
+      arenaTone(260, 3.05, 0.6, "square", 0.08, 70);
     }
 
     return () => {
