@@ -31,10 +31,11 @@ const rules = [
 ];
 
 const enemies = [
-  ["GRUNT", "Balanced enemy that moves directly toward you."],
-  ["RUNNER", "Fast enemy that closes distance quickly."],
-  ["TANK", "Slow, durable enemy with heavy contact damage."],
-  ["SHOOTER", "Keeps its distance and fires enemy projectiles."],
+  ["GRUNT", "Balanced enemy that moves directly toward you.", "Keep moving and fire while creating distance."],
+  ["RUNNER", "Fast enemy that closes distance quickly.", "Target runners first before they reach contact range."],
+  ["TANK", "Slow, durable enemy with heavy contact damage.", "Avoid body contact and focus sustained fire."],
+  ["SHOOTER", "Keeps its distance and fires enemy projectiles.", "Watch for projectiles and stay mobile."],
+  ["BOSS", "Large final enemy with high health and ranged attacks.", "The boss appears from Wave 5 onward with the full enemy roster."],
 ];
 
 function Rules() {
@@ -75,11 +76,14 @@ function Rules() {
               <span className="rules-line" />
             </div>
             <div className="enemy-list">
-              {enemies.map(([name, description]) => (
+              {enemies.map(([name, description, tactic]) => (
                 <div className="enemy-row" key={name}>
                   <span className={`enemy-mark enemy-${name.toLowerCase()}`} />
-                  <strong>{name}</strong>
-                  <span>{description}</span>
+                  <div className="enemy-details">
+                    <strong>{name}</strong>
+                    <span>{description}</span>
+                    <small>{tactic}</small>
+                  </div>
                 </div>
               ))}
             </div>

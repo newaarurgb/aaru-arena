@@ -134,16 +134,34 @@
 
 .enemy-row {
   display: grid;
-  grid-template-columns: 14px 76px 1fr;
+  grid-template-columns: 14px 1fr;
   align-items: center;
   gap: 10px;
-  min-height: 36px;
+  min-height: 48px;
 }
 
-.enemy-row strong {
+.enemy-details {
+  display: grid;
+  gap: 3px;
+}
+
+.enemy-details strong {
   color: #ffffff;
   font-size: 12px;
   letter-spacing: 1px;
+}
+
+.enemy-details span,
+.enemy-details small {
+  color: #a8babe;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.enemy-details small {
+  color: #00e5b7;
+  font-size: 11px;
 }
 
 .enemy-mark {
@@ -158,6 +176,7 @@
 .enemy-runner { background: #ffff00; }
 .enemy-tank { background: #aa44ff; }
 .enemy-shooter { background: #00aaff; border-radius: 50%; transform: none; }
+.enemy-boss { background: #ff0055; width: 13px; height: 13px; box-shadow: 0 0 16px #ff0055; }
 
 .controls-block {
   grid-column: 1 / -1;
