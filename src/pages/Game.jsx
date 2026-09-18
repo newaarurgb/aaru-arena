@@ -211,7 +211,7 @@ function Game() {
   // =====================================================
 
   const [playerName, setPlayerName] = useState(
-    () => sessionStorage.getItem("aaruMultiplayerName") || ""
+    () => sessionStorage.getItem("aaruMultiplayerName") || JSON.parse(localStorage.getItem("aaruProfile") || "null")?.displayName || ""
   );
   const [scoreSaved, setScoreSaved] = useState(false);
 

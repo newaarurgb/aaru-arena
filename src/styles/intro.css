@@ -86,6 +86,55 @@
 .intro-skip { position: absolute; right: 28px; bottom: max(24px, env(safe-area-inset-bottom)); z-index: 10; padding: 11px 16px; border: 1px solid rgba(0,245,255,0.5); background: rgba(2,5,11,0.6); color: #00f5ff; font: 11px monospace; cursor: pointer; }
 .intro-skip:hover { background: #00f5ff; color: #02050b; }
 
+.intro-auth-panel {
+  position: absolute;
+  z-index: 12;
+  top: 50%;
+  right: max(5vw, 32px);
+  width: min(360px, 38vw);
+  max-height: 88dvh;
+  overflow-y: auto;
+  padding: 22px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,245,255,0.45);
+  background: rgba(2, 5, 11, 0.86);
+  box-shadow: 0 0 32px rgba(0,245,255,0.14);
+  transform: translateY(-50%);
+  backdrop-filter: blur(9px);
+}
+
+.intro-auth-kicker,
+.intro-auth-panel h2,
+.intro-auth-tabs button,
+.intro-auth-submit,
+.intro-guest,
+.intro-local-note,
+.intro-avatar-picker p {
+  letter-spacing: 1.5px;
+  font-weight: 800;
+}
+
+.intro-auth-kicker { margin: 0 0 7px; color: #00f5ff; font: 10px monospace; }
+.intro-auth-panel h2 { margin: 0 0 16px; color: #fff; font-size: 18px; }
+.intro-auth-tabs { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 12px; border-bottom: 1px solid rgba(0,245,255,0.25); }
+.intro-auth-tabs button { padding: 9px 4px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #789095; font: 10px monospace; cursor: pointer; }
+.intro-auth-tabs button.active { color: #00f5ff; border-bottom-color: #00f5ff; }
+.intro-auth-panel form { display: grid; gap: 9px; }
+.intro-auth-panel input { width: 100%; min-height: 40px; box-sizing: border-box; padding: 10px 11px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #fff; outline: none; font: 11px monospace; letter-spacing: 1px; }
+.intro-auth-panel input:focus { border-color: #00f5ff; box-shadow: 0 0 12px rgba(0,245,255,0.18); }
+.intro-avatar-picker p { margin: 4px 0 7px; color: #91a9ae; font: 9px monospace; }
+.intro-avatar-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; }
+.intro-avatar { position: relative; width: 25px; aspect-ratio: 1; padding: 0; border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; background: color-mix(in srgb, var(--avatar-color) 32%, #07121a); cursor: pointer; }
+.intro-avatar span { position: absolute; left: 50%; top: 47%; width: 52%; height: 52%; transform: translate(-50%, -50%); border-radius: 50% 50% 44% 44%; background: var(--avatar-color); box-shadow: 0 0 8px var(--avatar-color); }
+.intro-avatar span::before { content: ""; position: absolute; left: 25%; top: 22%; width: 13%; height: 13%; border-radius: 50%; background: #061018; box-shadow: 140% 0 #061018; }
+.intro-avatar.lunar span { border-radius: 45% 45% 50% 50%; }
+.intro-avatar.lunar span::after { content: ""; position: absolute; left: -12%; top: -12%; width: 124%; height: 45%; border-radius: 50%; border-top: 3px solid var(--avatar-color); }
+.intro-avatar.selected { border-color: #fff; box-shadow: 0 0 10px var(--avatar-color); transform: scale(1.1); }
+.intro-auth-error { margin: 3px 0 0; color: #ff5c84; font: 10px monospace; line-height: 1.3; }
+.intro-auth-submit { min-height: 40px; border: 1px solid #00f5ff; background: #00f5ff; color: #02050b; font: 10px monospace; cursor: pointer; }
+.intro-guest { width: 100%; margin-top: 10px; padding: 8px; border: 1px solid rgba(255,255,255,0.18); background: transparent; color: #d7e7e9; font: 9px monospace; cursor: pointer; }
+.intro-local-note { margin: 12px 0 0; color: #668086; text-align: center; font: 8px monospace; }
+
 @keyframes introContentIn { from { opacity: 0; transform: scale(0.86) translateY(24px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes introReveal { from { opacity: 0; letter-spacing: 12px; } to { opacity: 1; letter-spacing: 3px; } }
 @keyframes introTitlePulse { 50% { transform: scale(1.025); filter: brightness(1.15); } }
@@ -101,4 +150,9 @@
   .intro-content h1 { letter-spacing: 2px; }
   .intro-tagline { font-size: 10px; }
   .intro-skip { right: 16px; font-size: 10px; }
+  .intro-content { top: 8%; transform: none; }
+  .intro-content h1 { font-size: clamp(48px, 16vw, 82px); }
+  .intro-auth-panel { top: auto; right: 12px; bottom: max(54px, env(safe-area-inset-bottom)); width: calc(100% - 24px); max-height: 62dvh; padding: 16px; transform: none; }
+  .intro-avatar-grid { gap: 4px; }
+  .intro-avatar { width: 24px; }
 }
