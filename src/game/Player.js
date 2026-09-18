@@ -1,0 +1,152 @@
+class Player {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+
+    this.width = 40;
+    this.height = 40;
+
+    this.speed = 5;
+
+    this.health = 100;
+    this.maxHealth = 100;
+
+    this.damageCooldown = false;
+
+    // Direction the player is facing
+    this.direction = "down";
+
+    // Attack settings
+    this.attackRange = 75;
+    this.attackDamage = 25;
+  }
+
+  move(keys, canvas) {
+    let moving = false;
+
+    if (keys["w"] || keys["W"] || keys["ArrowUp"]) {
+      this.y -= this.speed;
+      this.direction = "up";
+      moving = true;
+    }
+
+    if (keys["s"] || keys["S"] || keys["ArrowDown"]) {
+      this.y += this.speed;
+      this.direction = "down";
+      moving = true;
+    }
+
+    if (keys["a"] || keys["A"] || keys["ArrowLeft"]) {
+      this.x -= this.speed;
+      this.direction = "left";
+      moving = true;
+    }
+
+    if (keys["d"] || keys["D"] || keys["ArrowRight"]) {
+      this.x += this.speed;
+      this.direction = "right";
+      moving = true;
+    }
+
+    // Keep player inside arena
+    this.x = Math.max(
+      0,
+      Math.min(
+        this.x,
+        canvas.width - this.width
+      )
+    );
+
+    this.y = Math.max(
+      0,
+      Math.min(
+        this.y,
+        canvas.height - this.height
+      )
+    );
+
+    return moving;
+  }
+
+  takeDamage(amount) {
+    if (this.damageCooldown) {
+      return;
+    }
+
+    this.health -= amount;
+
+    if (this.health < 0) {
+      this.health = 0;
+    }
+
+    this.damageCooldown = true;
+
+    setTimeout(() => {
+      this.damageCooldown = false;
+    }, 500);
+  }
+
+  draw(ctx) {
+    // Player body
+    ctx.fillStyle = "#00f5ff";
+
+    ctx.shadowColor = "#00f5ff";
+    ctx.shadowBlur = 20;
+
+    ctx.fillRect(
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
+
+    ctx.shadowBlur = 0;
+
+    // Player core
+    ctx.fillStyle = "#ffffff";
+
+    ctx.fillRect(
+      this.x + 12,
+      this.y + 12,
+      16,
+      16
+    );
+
+    // Direction indicator
+    ctx.fillStyle = "#00f5ff";
+
+    const centerX = this.x + this.width / 2;
+    const centerY = this.y + this.height / 2;
+
+    ctx.beginPath();
+
+    if (this.direction === "up") {
+      ctx.moveTo(centerX, this.y - 8);
+      ctx.lineTo(centerX - 6, this.y + 4);
+      ctx.lineTo(centerX + 6, this.y + 4);
+    }
+
+    if (this.direction === "down") {
+      ctx.moveTo(centerX, this.y + this.height + 8);
+      ctx.lineTo(centerX - 6, this.y + this.height - 4);
+      ctx.lineTo(centerX + 6, this.y + this.height - 4);
+    }
+
+    if (this.direction === "left") {
+      ctx.moveTo(this.x - 8, centerY);
+      ctx.lineTo(this.x + 4, centerY - 6);
+      ctx.lineTo(this.x + 4, centerY + 6);
+    }
+
+    if (this.direction === "right") {
+      ctx.moveTo(this.x + this.width + 8, centerY);
+      ctx.lineTo(this.x + this.width - 4, centerY - 6);
+      ctx.lineTo(this.x + this.width - 4, centerY + 6);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+export default Player;

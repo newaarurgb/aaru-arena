@@ -1,0 +1,1332 @@
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #050505;
+  color: #ffffff;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* =========================================
+   HOME PAGE
+========================================= */
+
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #161616 0%,
+      #090909 45%,
+      #030303 100%
+    );
+
+  padding: 40px 20px;
+}
+
+.home-content {
+  text-align: center;
+}
+
+.game-version {
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: #777;
+  margin-bottom: 24px;
+}
+
+.home-content h1 {
+  font-size: clamp(48px, 9vw, 100px);
+  font-weight: 900;
+  letter-spacing: 8px;
+  line-height: 1;
+}
+
+.tagline {
+  margin-top: 20px;
+
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: #999;
+}
+
+
+/* =========================================
+   PLAY BUTTON
+========================================= */
+
+.play-button {
+  margin-top: 50px;
+
+  padding: 16px 55px;
+
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+
+  background: transparent;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 4px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.play-button:hover {
+  background: #ffffff;
+  color: #050505;
+  transform: translateY(-3px);
+}
+
+
+/* =========================================
+   GAME PAGE
+========================================= */
+
+.game-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background: #050505;
+
+  text-align: center;
+  padding: 30px;
+}
+
+.game-page h1 {
+  font-size: 42px;
+  letter-spacing: 4px;
+}
+
+.game-page p {
+  margin-top: 15px;
+  color: #888;
+}
+
+/* =========================================
+   AARU ARENA - GAME
+========================================= */
+
+.game-page {
+  min-height: 100vh;
+  background: #020202;
+  color: #ffffff;
+  padding: 30px;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.game-header {
+  width: min(1100px, 100%);
+  margin: 0 auto 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-header h1 {
+  margin: 0;
+
+  font-size: 28px;
+  letter-spacing: 4px;
+
+  color: #00f5ff;
+
+  text-shadow:
+    0 0 10px #00f5ff,
+    0 0 25px #00f5ff;
+}
+
+.game-header span {
+  color: #777;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+/* HEALTH */
+
+.health-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.health-container > span:first-child {
+  color: #ff3b3b;
+  font-weight: bold;
+}
+
+.health-bar {
+  width: 180px;
+  height: 12px;
+
+  background: #1a1a1a;
+
+  border: 1px solid #333;
+}
+
+.health-fill {
+  width: 100%;
+  height: 100%;
+
+  background: #ff3b3b;
+
+  box-shadow:
+    0 0 10px #ff3b3b,
+    0 0 20px #ff3b3b;
+}
+
+/* ARENA */
+
+.arena-wrapper {
+  width: min(1100px, 100%);
+  margin: auto;
+
+  display: flex;
+  justify-content: center;
+
+  border: 1px solid #00f5ff;
+
+  box-shadow:
+    0 0 15px rgba(0, 245, 255, 0.25),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+
+  background: #050505;
+}
+
+.arena-wrapper canvas {
+  display: block;
+
+  max-width: 100%;
+  height: auto;
+}
+
+/* CONTROLS */
+
+.controls {
+  width: min(900px, 100%);
+  margin: 20px auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  color: #00f5ff;
+}
+
+.controls span {
+  padding: 8px 12px;
+
+  border: 1px solid #333;
+
+  background: #0b0b0b;
+
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.controls small {
+  color: #666;
+  margin-right: 20px;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   GAME OVER
+========================================= */
+
+.arena-wrapper {
+  position: relative;
+}
+
+.game-over {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0, 0, 0, 0.75);
+
+  backdrop-filter: blur(6px);
+}
+
+.game-over-card {
+  text-align: center;
+
+  padding: 45px 60px;
+
+  border: 1px solid #ff1744;
+
+  background: rgba(5, 5, 5, 0.95);
+
+  box-shadow:
+    0 0 20px rgba(255, 23, 68, 0.4),
+    inset 0 0 25px rgba(255, 23, 68, 0.08);
+}
+
+.game-over-card p {
+  margin-bottom: 10px;
+
+  color: #ff1744;
+
+  font-size: 12px;
+
+  letter-spacing: 4px;
+}
+
+.game-over-card h2 {
+  margin: 0 0 12px;
+
+  font-size: 42px;
+
+  letter-spacing: 5px;
+
+  color: #ff1744;
+
+  text-shadow:
+    0 0 10px #ff1744,
+    0 0 25px #ff1744;
+}
+
+.game-over-card span {
+  display: block;
+
+  margin-bottom: 25px;
+
+  color: #888;
+}
+
+.game-over-card button {
+  padding: 12px 30px;
+
+  border: 1px solid #00f5ff;
+
+  background: transparent;
+
+  color: #00f5ff;
+
+  font-weight: bold;
+
+  letter-spacing: 2px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.game-over-card button:hover {
+  background: #00f5ff;
+
+  color: #000;
+
+  box-shadow:
+    0 0 15px #00f5ff,
+    0 0 30px #00f5ff;
+}
+
+/* =========================================
+   ENEMY COUNTER
+========================================= */
+
+.enemy-counter {
+  position: absolute;
+
+  top: 15px;
+  left: 15px;
+
+  padding: 8px 14px;
+
+  border: 1px solid #333;
+
+  background: rgba(0, 0, 0, 0.75);
+
+  color: #ff1744;
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  letter-spacing: 2px;
+}
+
+/* =========================================
+   WAVE MESSAGE
+========================================= */
+
+.wave-message {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  backdrop-filter: blur(4px);
+
+  text-align: center;
+}
+
+.wave-message div {
+  padding: 35px 60px;
+
+  border: 1px solid #00f5ff;
+
+  background: rgba(3, 3, 3, 0.95);
+
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.35);
+}
+
+.wave-message span {
+  color: #00f5ff;
+
+  font-size: 12px;
+
+  letter-spacing: 4px;
+}
+
+.wave-message h2 {
+  margin: 10px 0;
+
+  color: #ffffff;
+
+  font-size: 40px;
+
+  letter-spacing: 5px;
+}
+
+.wave-message p {
+  margin: 0;
+
+  color: #777;
+
+  font-size: 12px;
+
+  letter-spacing: 2px;
+}
+
+/* =========================================
+   GAME STATS
+========================================= */
+
+.game-stats {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.game-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-stats span {
+  font-size: 10px;
+  color: #666;
+  letter-spacing: 2px;
+}
+
+.game-stats strong {
+  font-size: 16px;
+  color: #00f5ff;
+}
+
+/* XP */
+
+.xp-section {
+  min-width: 150px;
+}
+
+.xp-bar {
+  width: 150px;
+  height: 8px;
+
+  background: #151515;
+
+  border: 1px solid #333;
+}
+
+.xp-fill {
+  height: 100%;
+
+  background: #b000ff;
+
+  box-shadow:
+    0 0 8px #b000ff;
+}
+
+.xp-section small {
+  color: #777;
+  font-size: 9px;
+}
+
+/* =========================================
+   LEVEL UP
+========================================= */
+
+.level-up {
+  position: absolute;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.75);
+
+  backdrop-filter: blur(8px);
+
+  z-index: 10;
+}
+
+.level-up-card {
+  width: 650px;
+  max-width: 90%;
+
+  padding: 40px;
+
+  text-align: center;
+
+  border: 1px solid #b000ff;
+
+  background: #060606;
+
+  box-shadow:
+    0 0 25px rgba(176, 0, 255, 0.4);
+}
+
+.level-up-card > span {
+  color: #b000ff;
+
+  font-size: 12px;
+
+  letter-spacing: 5px;
+}
+
+.level-up-card h2 {
+  margin: 10px 0;
+
+  font-size: 42px;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 10px #b000ff;
+}
+
+.level-up-card p {
+  color: #777;
+
+  margin-bottom: 30px;
+}
+
+.upgrade-options {
+  display: flex;
+
+  gap: 15px;
+
+  justify-content: center;
+}
+
+.upgrade-options button {
+  flex: 1;
+
+  min-height: 130px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 1px solid #333;
+
+  background: #0b0b0b;
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.upgrade-options button:hover {
+  border-color: #00f5ff;
+
+  transform: translateY(-5px);
+
+  box-shadow:
+    0 0 20px rgba(0, 245, 255, 0.25);
+}
+
+.upgrade-options button:first-child:hover {
+  border-color: #ff1744;
+}
+
+.upgrade-options button:nth-child(2):hover {
+  border-color: #00f5ff;
+}
+
+.upgrade-options button:nth-child(3):hover {
+  border-color: #ff3b3b;
+}
+
+.upgrade-options button strong {
+  font-size: 14px;
+
+  letter-spacing: 2px;
+}
+
+.upgrade-options button small {
+  color: #777;
+
+  font-size: 10px;
+
+  letter-spacing: 1px;
+}
+
+/* =========================================================
+   GAME OVER / LEVEL UP OVERLAY
+========================================================= */
+
+.game-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.82);
+
+  z-index: 99999;
+}
+
+.overlay-box {
+  width: min(90%, 500px);
+  padding: 40px;
+
+  text-align: center;
+
+  background: #080808;
+  border: 2px solid #00ffff;
+
+  box-shadow:
+    0 0 20px rgba(0, 255, 255, 0.35),
+    0 0 60px rgba(0, 255, 255, 0.15),
+    inset 0 0 20px rgba(0, 255, 255, 0.05);
+
+  animation: overlayAppear 0.3s ease-out;
+}
+
+.overlay-box h1 {
+  margin-bottom: 20px;
+
+  color: #00ffff;
+
+  font-size: 42px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 10px #00ffff,
+    0 0 25px rgba(0, 255, 255, 0.6);
+}
+
+.overlay-box p {
+  margin: 10px 0;
+
+  color: #ffffff;
+
+  font-size: 18px;
+}
+
+@keyframes overlayAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.game-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+
+  overflow: hidden;
+}
+
+/* =========================================================
+   AARU ARENA — LEVEL UP SCREEN
+========================================================= */
+
+.level-up-box {
+  position: relative;
+
+  width: min(92%, 560px);
+  padding: 42px 38px 38px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(0, 255, 255, 0.08),
+      rgba(5, 5, 5, 0.98) 35%,
+      rgba(150, 0, 255, 0.08)
+    );
+
+  border: 2px solid #00ffff;
+
+  box-shadow:
+    0 0 15px rgba(0, 255, 255, 0.6),
+    0 0 45px rgba(0, 255, 255, 0.25),
+    inset 0 0 30px rgba(0, 255, 255, 0.05);
+
+  overflow: hidden;
+
+  animation: levelUpAppear 0.35s ease-out;
+}
+
+/* Scanline effect */
+
+.level-up-box::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 255, 255, 0.025) 4px
+  );
+
+  pointer-events: none;
+}
+
+/* Top neon line */
+
+.level-up-box::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 3px;
+
+  background: #00ffff;
+
+  box-shadow:
+    0 0 10px #00ffff,
+    0 0 25px #00ffff;
+}
+
+
+/* =========================================================
+   LEVEL UP TITLE
+========================================================= */
+
+.level-up-box h1 {
+  position: relative;
+  z-index: 2;
+
+  margin: 0 0 8px;
+
+  font-size: clamp(32px, 7vw, 52px);
+  font-weight: 900;
+
+  letter-spacing: 5px;
+
+  color: #ffffff;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 8px #00ffff,
+    0 0 18px #00ffff,
+    0 0 35px rgba(0, 255, 255, 0.8);
+}
+
+/* Subtitle */
+
+.level-up-box > p {
+  position: relative;
+  z-index: 2;
+
+  margin: 0 0 30px;
+
+  color: #00ffff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  opacity: 0.9;
+}
+
+
+/* =========================================================
+   UPGRADE OPTIONS
+========================================================= */
+
+.upgrade-options {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 14px;
+}
+
+
+/* =========================================================
+   UPGRADE BUTTON
+========================================================= */
+
+.upgrade-options button {
+  position: relative;
+
+  min-height: 145px;
+
+  padding: 22px 12px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  cursor: pointer;
+
+  background:
+    linear-gradient(
+      160deg,
+      rgba(0, 255, 255, 0.09),
+      rgba(0, 0, 0, 0.8)
+    );
+
+  border: 1px solid rgba(0, 255, 255, 0.45);
+
+  color: #ffffff;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+
+/* Hover */
+
+.upgrade-options button:hover {
+  transform: translateY(-8px);
+
+  border-color: #00ffff;
+
+  background:
+    linear-gradient(
+      160deg,
+      rgba(0, 255, 255, 0.2),
+      rgba(0, 0, 0, 0.9)
+    );
+
+  box-shadow:
+    0 0 12px rgba(0, 255, 255, 0.55),
+    0 0 30px rgba(0, 255, 255, 0.2);
+}
+
+
+/* Click */
+
+.upgrade-options button:active {
+  transform: translateY(-3px) scale(0.97);
+}
+
+
+/* =========================================================
+   UPGRADE NAME
+========================================================= */
+
+.upgrade-options button strong {
+  font-size: 20px;
+
+  letter-spacing: 2px;
+
+  color: #00ffff;
+
+  text-shadow:
+    0 0 8px rgba(0, 255, 255, 0.8);
+}
+
+
+/* Upgrade description */
+
+.upgrade-options button span {
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+  color: #ffffff;
+
+  opacity: 0.8;
+}
+
+
+/* =========================================================
+   SMALL CORNER DETAILS
+========================================================= */
+
+.upgrade-options button::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 18px;
+  height: 18px;
+
+  border-top: 2px solid #00ffff;
+  border-left: 2px solid #00ffff;
+}
+
+.upgrade-options button::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: 0;
+  right: 0;
+
+  width: 18px;
+  height: 18px;
+
+  border-bottom: 2px solid #00ffff;
+  border-right: 2px solid #00ffff;
+}
+
+
+/* =========================================================
+   LEVEL UP ANIMATION
+========================================================= */
+
+@keyframes levelUpAppear {
+  0% {
+    opacity: 0;
+
+    transform:
+      scale(0.75)
+      translateY(25px);
+  }
+
+  70% {
+    transform:
+      scale(1.03)
+      translateY(0);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      scale(1)
+      translateY(0);
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+
+  .level-up-box {
+    width: 92%;
+
+    padding: 32px 20px 24px;
+  }
+
+  .upgrade-options {
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+  }
+
+  .upgrade-options button {
+    min-height: 75px;
+
+    padding: 14px;
+
+    flex-direction: row;
+
+    justify-content: space-between;
+  }
+
+  .upgrade-options button strong {
+    font-size: 17px;
+  }
+
+  .upgrade-options button span {
+    font-size: 11px;
+  }
+}
+
+/* =========================================================
+   POWER-UP NOTIFICATION
+========================================================= */
+
+.power-up-message {
+  position: fixed;
+  top: 110px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  padding: 12px 28px;
+
+  background: rgba(5, 5, 5, 0.92);
+  border: 1px solid #00ffff;
+
+  color: #00ffff;
+
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 2px;
+
+  text-shadow:
+    0 0 8px #00ffff,
+    0 0 18px #00ffff;
+
+  box-shadow:
+    0 0 10px rgba(0, 255, 255, 0.5),
+    inset 0 0 12px rgba(0, 255, 255, 0.08);
+
+  z-index: 9999;
+
+  animation:
+    powerUpPop 0.25s ease-out,
+    powerUpFade 1.8s ease forwards;
+}
+
+@keyframes powerUpPop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes powerUpFade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .power-up-message {
+    top: 90px;
+    font-size: 13px;
+    padding: 10px 18px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+}
+
+/* =====================================================
+   ARENA SETUP
+===================================================== */
+
+.arena-setup-page {
+  min-height: 100vh;
+  background: #050505;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+.arena-setup-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.arena-setup-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: rgba(0, 255, 255, 0.07);
+  filter: blur(120px);
+}
+
+.arena-setup-panel {
+  position: relative;
+  z-index: 2;
+  width: min(560px, 92vw);
+  padding: 45px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: rgba(5, 8, 8, 0.94);
+  box-shadow:
+    0 0 50px rgba(0, 255, 255, 0.08),
+    inset 0 0 40px rgba(0, 255, 255, 0.025);
+}
+
+.setup-kicker {
+  color: #00ffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 18px;
+}
+
+.arena-setup-panel h1 {
+  margin: 0;
+  font-size: clamp(32px, 6vw, 52px);
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.setup-subtitle {
+  color: #666;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  margin: 12px 0 35px;
+}
+
+.setup-form label,
+.mode-label {
+  display: block;
+  color: #00ffff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 9px;
+}
+
+.setup-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px;
+  background: #080808;
+  border: 1px solid #333;
+  color: #fff;
+  outline: none;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  transition: 0.2s;
+}
+
+.setup-form input:focus {
+  border-color: #00ffff;
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.15);
+}
+
+.mode-label {
+  margin-top: 25px;
+}
+
+.mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mode-button {
+  padding: 17px 12px;
+  background: #080808;
+  border: 1px solid #292929;
+  color: #777;
+  cursor: pointer;
+  font-weight: 900;
+  letter-spacing: 1px;
+  transition: 0.2s;
+}
+
+.mode-button span {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.mode-button small {
+  display: block;
+  margin-top: 6px;
+  color: #444;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+
+.mode-button.active {
+  color: #00ffff;
+  border-color: #00ffff;
+  background: rgba(0, 255, 255, 0.06);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+}
+
+.mode-button.multiplayer-active {
+  color: #ffcc00;
+  border-color: #ffcc00;
+  background: rgba(255, 204, 0, 0.05);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.1);
+}
+
+.room-section {
+  margin-top: 22px;
+}
+
+.room-section p {
+  color: #555;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.setup-error {
+  margin-top: 16px;
+  padding: 10px;
+  border: 1px solid #ff0055;
+  background: rgba(255, 0, 85, 0.06);
+  color: #ff4d88;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.deploy-button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 17px;
+  border: 1px solid #00ffff;
+  background: #00ffff;
+  color: #020606;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.deploy-button span {
+  margin-left: 12px;
+  font-size: 18px;
+}
+
+.deploy-button:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.setup-back-button {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  color: #555;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.setup-back-button:hover {
+  color: #00ffff;
+}
+
+@media (max-width: 600px) {
+  .arena-setup-panel {
+    padding: 30px 20px;
+  }
+
+  .mode-selector {
+    grid-template-columns: 1fr;
+  }
+}
