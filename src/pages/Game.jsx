@@ -1522,18 +1522,41 @@ function Game() {
       const viewport = window.visualViewport;
       const viewportWidth = viewport?.width || window.innerWidth;
       const viewportHeight = viewport?.height || window.innerHeight;
+      const isMobileViewport = viewportWidth <= 650;
 
       canvas.width =
         Math.min(
-          Math.max(280, viewportWidth - 40),
+          Math.max(280, viewportWidth - (isMobileViewport ? 24 : 40)),
           1000
         );
 
       canvas.height =
         Math.min(
-          Math.max(360, viewportHeight - 180),
+          Math.max(
+            isMobileViewport ? 240 : 360,
+            viewportHeight - (isMobileViewport ? 250 : 180)
+          ),
           650
         );
+
+      if (playerRef.current) {
+        playerRef.current.x = Math.max(
+          0,
+          Math.min(canvas.width - playerRef.current.width, playerRef.current.x)
+        );
+        playerRef.current.y = Math.max(
+          0,
+          Math.min(canvas.height - playerRef.current.height, playerRef.current.y)
+        );
+      }
+
+      if (isMobileViewport) {
+        const joystickBottomOffset = viewportHeight < 500 ? 12 : 190;
+        setJoystickPos((position) => ({
+          x: Math.max(12, Math.min(viewportWidth - 156, position.x)),
+          y: Math.max(84, Math.min(viewportHeight - joystickBottomOffset, position.y)),
+        }));
+      }
     };
 
     resizeCanvas();
@@ -3109,8 +3132,8 @@ function Game() {
       <div
         className="mobile-controls"
         style={{
-          left: `${Math.min(Math.max(joystickPos.x, 20), Math.max(20, window.innerWidth - 170))}px`,
-          top: `${Math.min(Math.max(joystickPos.y, 120), Math.max(120, window.innerHeight - 170))}px`,
+          left: `${Math.min(Math.max(joystickPos.x, 12), Math.max(12, (window.visualViewport?.width || window.innerWidth) - 156))}px`,
+          top: `${Math.min(Math.max(joystickPos.y, 84), Math.max(84, (window.visualViewport?.height || window.innerHeight) - ((window.visualViewport?.height || window.innerHeight) < 500 ? 12 : 190)))}px`,
         }}
         onPointerDown={(event) => {
           const target = event.target;
@@ -3139,8 +3162,8 @@ function Game() {
           const dy = event.clientY - joystickDragRef.current.startY;
 
           setJoystickPos({
-            x: Math.max(20, Math.min(window.innerWidth - 170, joystickDragRef.current.originX + dx)),
-            y: Math.max(120, Math.min(window.innerHeight - 170, joystickDragRef.current.originY + dy)),
+            x: Math.max(12, Math.min((window.visualViewport?.width || window.innerWidth) - 156, joystickDragRef.current.originX + dx)),
+            y: Math.max(84, Math.min((window.visualViewport?.height || window.innerHeight) - ((window.visualViewport?.height || window.innerHeight) < 500 ? 12 : 190), joystickDragRef.current.originY + dy)),
           });
         }}
         onPointerUp={(event) => {

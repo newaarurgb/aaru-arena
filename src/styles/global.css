@@ -127,7 +127,7 @@ body {
   background: #050505;
 
   text-align: center;
-  padding: 30px;
+  padding: 20px;
 }
 
 .game-page h1 {
@@ -159,6 +159,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .game-header h1 {
@@ -503,6 +504,7 @@ body {
   display: flex;
   align-items: center;
   gap: 25px;
+  flex-wrap: wrap;
 }
 
 .game-stats > div {
@@ -1066,6 +1068,44 @@ body {
 ========================================================= */
 
 @media (max-width: 650px) {
+  .game-page {
+    min-height: 100dvh;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    justify-content: flex-start;
+  }
+
+  .game-header {
+    width: 100%;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .game-title {
+    font-size: 15px;
+    letter-spacing: 2px;
+  }
+
+  .game-stats {
+    width: 100%;
+    justify-content: center;
+    gap: 8px 14px;
+  }
+
+  .game-hud {
+    width: 100%;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .arena-wrapper {
+    width: 100%;
+  }
+
+  .arena-wrapper canvas {
+    width: 100%;
+    height: auto;
+  }
+
   .mobile-controls {
     position: fixed;
     display: flex;
@@ -1403,5 +1443,42 @@ body {
 
   .mode-selector {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) and (orientation: landscape) {
+  .game-page {
+    padding-top: max(4px, env(safe-area-inset-top));
+    padding-bottom: max(4px, env(safe-area-inset-bottom));
+  }
+
+  .game-header {
+    margin-bottom: 3px;
+  }
+
+  .game-hud {
+    margin-bottom: 3px;
+  }
+
+  .health-bar,
+  .xp-bar {
+    height: 7px;
+  }
+
+  .mobile-controls {
+    width: 112px;
+    height: 112px;
+  }
+
+  .mobile-joystick {
+    width: 100px;
+    height: 100px;
+  }
+
+  .joystick-knob {
+    width: 32px;
+    height: 32px;
+    margin-left: -16px;
+    margin-top: -16px;
   }
 }
