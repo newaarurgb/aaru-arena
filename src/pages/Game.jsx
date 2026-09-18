@@ -2434,6 +2434,12 @@ function Game() {
 
         waveClearedRef.current = true;
 
+        if (playerRef.current) {
+          playerRef.current.health =
+            playerRef.current.maxHealth || 100;
+          setHealth(playerRef.current.health);
+        }
+
         setWaveCleared(true);
 
         shootingRef.current = false;
