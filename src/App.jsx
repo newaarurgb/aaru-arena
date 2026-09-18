@@ -7,6 +7,7 @@ import Rules from "./pages/Rules";
 import EnvironmentSelect from "./pages/EnvironmentSelect";
 import StyleSelect from "./pages/StyleSelect";
 import Intro from "./pages/Intro";
+import MultiplayerLobby from "./pages/MultiplayerLobby";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/environment" element={<EnvironmentSelect />} />
         <Route path="/style" element={<StyleSelect />} />
         <Route path="/intro" element={<Intro />} />
+        <Route path="/multiplayer" element={<MultiplayerLobby />} />
       </Routes>
     </HashRouter>
   );

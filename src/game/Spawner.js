@@ -63,7 +63,7 @@ class Spawner {
     )[0];
   }
 
-  static createWave(wave, canvasWidth, canvasHeight, player = null) {
+  static createWave(wave, canvasWidth, canvasHeight, player = null, difficulty = "hard") {
     const safeWave = Math.max(1, Math.floor(Number(wave) || 1));
     const width = Math.max(1, canvasWidth || 1);
     const height = Math.max(1, canvasHeight || 1);
@@ -73,11 +73,12 @@ class Spawner {
     // Wave 1 = 5 enemies, then +2 every wave.
     // Wave 2 = 7, Wave 3 = 9, Wave 4 = 11, etc.
     const safeRadius = 220 + safeWave * 25;
+    const spawnMultiplier = difficulty === "difficult" ? 1.5 : difficulty === "hard" ? 1.25 : 1;
     let spawnIndex = 0;
 
     // Wave 1 = 5, Wave 2 = 5 + 7, Wave 3 = 5 + 7 + 9, etc.
     for (let batchWave = 1; batchWave <= safeWave; batchWave++) {
-      const batchCount = 5 + (batchWave - 1) * 2;
+      const batchCount = Math.ceil((5 + (batchWave - 1) * 2) * spawnMultiplier);
 
       for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
       const spawn = Spawner.getSafeSpawnPoint(

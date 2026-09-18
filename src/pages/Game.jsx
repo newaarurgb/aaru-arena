@@ -3,7 +3,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/multiplayer.css";
 
 import Player from "../game/Player";
@@ -80,6 +80,7 @@ class BossEnemy {
 }
 
 function Game() {
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
 
   // =====================================================
@@ -209,12 +210,16 @@ function Game() {
   // LEADERBOARD
   // =====================================================
 
-  const [playerName, setPlayerName] = useState("");
+  const [playerName, setPlayerName] = useState(
+    () => sessionStorage.getItem("aaruMultiplayerName") || ""
+  );
   const [scoreSaved, setScoreSaved] = useState(false);
 
   const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [gameMode, setGameMode] = useState("solo");
+  const [gameMode, setGameMode] = useState(
+    () => sessionStorage.getItem("aaruMultiplayerRoom") ? "multiplayer" : "solo"
+  );
   const [difficulty, setDifficulty] = useState("hard");
   const [environment, setEnvironment] = useState(
     () => sessionStorage.getItem("aaruEnvironment") || "neon"
@@ -222,7 +227,9 @@ function Game() {
   const [playerDesign, setPlayerDesign] = useState(
     () => sessionStorage.getItem("aaruPlayerDesign") || "aqua"
   );
-  const [roomCode, setRoomCode] = useState("");
+  const [roomCode, setRoomCode] = useState(
+    () => sessionStorage.getItem("aaruMultiplayerRoom") || ""
+  );
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
@@ -1638,24 +1645,28 @@ function Game() {
       const viewportHeight = viewport?.height || window.innerHeight;
       const isMobileViewport = viewportWidth <= 650;
       const isLandscapeViewport = viewportWidth > viewportHeight;
+      const connectedPlayers = Math.max(1, multiplayerPlayers.length);
+      const fieldScale = gameMode === "multiplayer"
+        ? 1 + Math.min(0.55, (connectedPlayers - 1) * 0.07)
+        : 1.18;
 
       canvas.width =
         Math.min(
-          Math.max(280, viewportWidth - (isMobileViewport ? 24 : 40)),
-          1000
+          Math.max(280, (viewportWidth - (isMobileViewport ? 24 : 40)) * fieldScale),
+          1400
         );
 
       canvas.height =
         Math.min(
           Math.max(
             isMobileViewport ? 300 : 360,
-            viewportHeight - (
+            (viewportHeight - (
               isMobileViewport
                 ? isLandscapeViewport ? 120 : 190
                 : 180
-            )
+            )) * fieldScale
           ),
-          650
+          900
         );
 
       if (playerRef.current) {
@@ -1730,7 +1741,8 @@ function Game() {
           4,
           canvas.width,
           canvas.height,
-          playerRef.current
+          playerRef.current,
+          difficulty
         );
 
         const bossSpawn = Spawner.getSafeSpawnPoint(
@@ -1754,7 +1766,8 @@ function Game() {
           wave,
           canvas.width,
           canvas.height,
-          playerRef.current
+          playerRef.current,
+          difficulty
         );
       }
 
@@ -2751,6 +2764,8 @@ function Game() {
     gameStarted,
     paused,
     gameMode,
+    difficulty,
+    multiplayerPlayers.length,
     environment,
     playerDesign,
   ]);
@@ -3051,6 +3066,7 @@ function Game() {
                   onClick={() => {
                     setGameMode("multiplayer");
                     setMultiplayerError("");
+                    navigate("/multiplayer");
                   }}
                 >
                   MULTIPLAYER

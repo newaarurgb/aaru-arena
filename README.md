@@ -1,4 +1,29 @@
-# React + Vite
+# AARU ARENA
+
+## Multiplayer server
+
+Run the WebSocket server locally in a second terminal:
+
+```bash
+npm run multiplayer
+```
+
+The server generates six-character room codes, supports up to 10 players per room, and passes host start signals and player positions to the game.
+
+For a deployed frontend, set `VITE_WS_URL` to the public `wss://` URL of the deployed WebSocket server. Vercel serves the frontend, but it does not run this long-lived WebSocket process.
+
+## Frontend
+
+```bash
+npm run dev
+npm run build
+```
+
+The multiplayer entry is available from the deployment screen through the `MULTIPLAYER` button.
+
+---
+
+The project is built with React and Vite.
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
