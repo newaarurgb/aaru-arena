@@ -3181,8 +3181,7 @@ function Game() {
         className="mobile-controls"
         style={{
           left: "16px",
-          top: "50%",
-          transform: "translateY(-50%)",
+          bottom: "150px",
         }}
         onPointerDown={(event) => {
           const target = event.target;
