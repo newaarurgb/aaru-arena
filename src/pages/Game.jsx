@@ -1560,17 +1560,28 @@ function Game() {
       let spawnedEnemies = [];
 
       if (wave >= 5) {
+        const bossSpawn = Spawner.getSafeSpawnPoint(
+          canvas.width,
+          canvas.height,
+          playerRef.current,
+          0,
+          90,
+          90,
+          300
+        );
+
         spawnedEnemies = [
           new BossEnemy(
-            canvas.width / 2 - 45,
-            70
+            bossSpawn.x,
+            bossSpawn.y
           ),
         ];
       } else {
         spawnedEnemies = Spawner.createWave(
           wave,
           canvas.width,
-          canvas.height
+          canvas.height,
+          playerRef.current
         );
       }
 
