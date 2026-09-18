@@ -215,7 +215,9 @@ function Game() {
   );
   const [scoreSaved, setScoreSaved] = useState(false);
 
-  const [gameStarted, setGameStarted] = useState(false);
+  const [gameStarted, setGameStarted] = useState(
+    () => sessionStorage.getItem("aaruMultiplayerStarted") === "true"
+  );
   const [paused, setPaused] = useState(false);
   const [gameMode, setGameMode] = useState(
     () => sessionStorage.getItem("aaruMultiplayerRoom") ? "multiplayer" : "solo"
@@ -406,6 +408,17 @@ function Game() {
     setGameStarted(true);
     setMultiplayerStatus("MATCH LIVE");
   };
+
+  useEffect(() => {
+    if (
+      gameMode === "multiplayer" &&
+      gameStarted &&
+      roomCode &&
+      !multiplayerSocketRef.current
+    ) {
+      connectMultiplayer();
+    }
+  }, [gameMode, gameStarted, roomCode]);
 
   const saveScoreToLeaderboard = () => {
     const cleanName = playerName.trim().slice(0, 16);
@@ -1650,13 +1663,13 @@ function Game() {
       const isLandscapeViewport = viewportWidth > viewportHeight;
       const connectedPlayers = Math.max(1, multiplayerPlayers.length);
       const fieldScale = gameMode === "multiplayer"
-        ? 1 + Math.min(0.55, (connectedPlayers - 1) * 0.07)
-        : 1.18;
+        ? 1.35 + Math.min(0.9, (connectedPlayers - 1) * 0.1)
+        : 1.45;
 
       canvas.width =
         Math.min(
           Math.max(280, (viewportWidth - (isMobileViewport ? 24 : 40)) * fieldScale),
-          1400
+          2000
         );
 
       canvas.height =
@@ -1669,7 +1682,7 @@ function Game() {
                 : 180
             )) * fieldScale
           ),
-          900
+          1250
         );
 
       if (playerRef.current) {
@@ -2369,10 +2382,7 @@ function Game() {
         context.fillStyle = "#00ffff";
         context.font = "700 11px monospace";
         context.textAlign = "center";
-        context.fillText((remotePlayer.name || "PLAYER").slice(0, 14), 0, -30);
-        context.font = "9px monospace";
-        context.fillStyle = "#ffffff";
-        context.fillText(`AVATAR ${remotePlayer.avatar || 1}`, 0, -18);
+        context.fillText(`${(remotePlayer.name || "PLAYER").slice(0, 12)}  ◉${remotePlayer.avatar || 1}`, 0, -22);
         context.restore();
       });
     }
@@ -2947,6 +2957,9 @@ function Game() {
     pendingStartRef.current = false;
 
     setGameStarted(false);
+    sessionStorage.removeItem("aaruMultiplayerStarted");
+    sessionStorage.removeItem("aaruMultiplayerRoom");
+    sessionStorage.removeItem("aaruMultiplayerName");
     setPaused(false);
     setMultiplayerPlayers([]);
     setMultiplayerStatus("OFFLINE");
@@ -3055,17 +3068,20 @@ function Game() {
 
             <div className="lobby-step">
               <p className="lobby-step-label">01 // CALLSIGN</p>
-              <input
-                className="leaderboard-name-input multiplayer-input"
-                type="text"
-                maxLength={16}
-                value={playerName}
-                onChange={(event) => {
-                  setPlayerName(event.target.value.toUpperCase().slice(0, 16));
-                  setMultiplayerError("");
-                }}
-                placeholder="ENTER CALLSIGN"
-              />
+              <div className="callsign-profile-row">
+                <input
+                  className="leaderboard-name-input multiplayer-input"
+                  type="text"
+                  maxLength={16}
+                  value={playerName}
+                  onChange={(event) => {
+                    setPlayerName(event.target.value.toUpperCase().slice(0, 16));
+                    setMultiplayerError("");
+                  }}
+                  placeholder="ENTER CALLSIGN"
+                />
+                <span className="callsign-avatar-badge">◉{profile.avatar || 1}</span>
+              </div>
             </div>
 
             <div className="lobby-step">

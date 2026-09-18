@@ -106,10 +106,7 @@ class Player {
     ctx.fillStyle = colors.accent;
     ctx.shadowColor = colors.accent;
     ctx.shadowBlur = 8;
-    ctx.fillText((this.displayName || "PILOT").slice(0, 14), this.x + this.width / 2, this.y - 22);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "9px monospace";
-    ctx.fillText(`AVATAR ${this.avatar || 1}`, this.x + this.width / 2, this.y - 10);
+    ctx.fillText(`${(this.displayName || "PILOT").slice(0, 12)}  ◉${this.avatar || 1}`, this.x + this.width / 2, this.y - 16);
     ctx.restore();
 
     // Player body

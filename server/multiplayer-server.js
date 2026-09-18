@@ -20,7 +20,10 @@ function send(socket, message) {
 }
 
 function broadcastRoom(room) {
-  const players = room.players.map(({ socket, ...player }) => player);
+  const players = room.players.map(({ socket, ...player }) => ({
+    ...player,
+    isHost: player.id === room.hostId,
+  }));
   room.players.forEach((player) => send(player.socket, {
     type: "room_state",
     room: room.code,
@@ -83,9 +86,30 @@ server.on("connection", (socket) => {
         send(socket, { type: "error", message: "ONLY THE HOST CAN START THE MATCH." });
         return;
       }
+      if (room.players.length < MAX_PLAYERS) {
+        send(socket, { type: "error", message: `WAITING FOR ALL PLAYERS. ${room.players.length}/${MAX_PLAYERS} CONNECTED.` });
+        return;
+      }
       room.started = true;
       room.players.forEach((member) => send(member.socket, { type: "game_started", room: room.code }));
       broadcastRoom(room);
+      return;
+    }
+
+    if (message.type === "chat_message" && room && player) {
+      const text = String(message.text || "").trim().slice(0, 160);
+      if (!text) return;
+
+      room.players.forEach((member) => send(member.socket, {
+        type: "chat_message",
+        message: {
+          id: `${playerId}-${Date.now()}`,
+          playerId,
+          name: player.name,
+          avatar: player.avatar,
+          text,
+        },
+      }));
       return;
     }
 

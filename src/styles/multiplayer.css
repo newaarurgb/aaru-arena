@@ -290,6 +290,100 @@
   white-space: nowrap !important;
 }
 
+.lobby-callsign-row,
+.callsign-profile-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lobby-callsign-row .multiplayer-input,
+.callsign-profile-row .multiplayer-input {
+  flex: 1;
+}
+
+.lobby-avatar-preview,
+.callsign-avatar-badge,
+.lobby-player-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 42px;
+  min-height: 36px;
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.08);
+  font: 800 10px monospace;
+}
+
+.lobby-player-avatar {
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 50%;
+  font-size: 9px;
+}
+
+.waiting-room-chat {
+  margin: 14px 0 8px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.18);
+  text-align: left;
+}
+
+.chat-heading {
+  display: flex;
+  justify-content: space-between;
+  color: #00ffff;
+  font: 800 10px monospace;
+  letter-spacing: 1px;
+}
+
+.chat-heading small {
+  color: #839da1;
+  font-size: 9px;
+}
+
+.chat-messages {
+  height: 96px;
+  overflow-y: auto;
+  margin: 8px 0;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  font: 10px/1.45 monospace;
+}
+
+.chat-messages p {
+  margin: 0 0 5px;
+  color: #c7e6e9;
+}
+
+.chat-messages strong { color: #00ffff; }
+
+.chat-form {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  background: #071015;
+  color: #fff;
+  font: 10px monospace;
+}
+
+.chat-form button {
+  padding: 0 10px;
+  border: 1px solid #00ffff;
+  background: transparent;
+  color: #00ffff;
+  font: 800 10px monospace;
+}
+
 /* ---------------------------------------------------------
    DEPLOY BUTTON
 --------------------------------------------------------- */
@@ -310,6 +404,14 @@
   color: #00ff88 !important;
   background: rgba(0, 255, 136, 0.1) !important;
   box-shadow: 0 0 22px rgba(0, 255, 136, 0.35) !important;
+}
+
+.multiplayer-deploy-button:disabled {
+  border-color: #526568 !important;
+  color: #718387 !important;
+  background: rgba(82, 101, 104, 0.08) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
 }
 
 /* ---------------------------------------------------------
