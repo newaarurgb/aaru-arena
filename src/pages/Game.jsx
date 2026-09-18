@@ -92,6 +92,7 @@ function Game() {
     y: 0,
   });
 
+  const touchMoveRef = useRef({ x: 0, y: 0, active: false });
   const touchKeysRef = useRef({});
   const shootingRef = useRef(false);
   const lastShotRef = useRef(0);
@@ -1146,6 +1147,22 @@ function Game() {
         "right";
     }
 
+    if (touchMoveRef.current.active) {
+      dx += touchMoveRef.current.x;
+      dy += touchMoveRef.current.y;
+
+      if (Math.abs(touchMoveRef.current.x) > 0.15 || Math.abs(touchMoveRef.current.y) > 0.15) {
+        const moveX = touchMoveRef.current.x;
+        const moveY = touchMoveRef.current.y;
+
+        if (Math.abs(moveX) > Math.abs(moveY)) {
+          currentPlayer.direction = moveX > 0 ? "right" : "left";
+        } else if (moveY !== 0) {
+          currentPlayer.direction = moveY > 0 ? "down" : "up";
+        }
+      }
+    }
+
     // -----------------------------------------------------
     // NORMALIZE DIAGONAL MOVEMENT
     // -----------------------------------------------------
@@ -1197,10 +1214,6 @@ function Game() {
         )
       );
   }
-
-  // =====================================================
-  // ENEMY UPDATE + PLAYER COLLISION
-  // =====================================================
 
   function updateEnemies(canvas) {
     const currentPlayer = playerRef.current;
@@ -2990,96 +3003,89 @@ function Game() {
       ================================================= */}
 
       <div className="mobile-controls">
-        <div className="mobile-dpad">
-          <button
-            className="mobile-control up"
-            onPointerDown={(event) => {
-              event.preventDefault();
-              touchKeysRef.current.w = true;
-            }}
-            onPointerUp={(event) => {
-              event.preventDefault();
-              touchKeysRef.current.w = false;
-            }}
-            onPointerLeave={(event) => {
-              event.preventDefault();
-              touchKeysRef.current.w = false;
-            }}
-            onPointerCancel={(event) => {
-              event.preventDefault();
-              touchKeysRef.current.w = false;
-            }}
-          >
-            ▲
-          </button>
+        <div
+          className={`mobile-joystick ${touchMoveRef.current.active ? "active" : ""}`}
+          onPointerDown={(event) => {
+            const base = event.currentTarget;
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const radius = rect.width / 2 - 10;
+            const offsetX = event.clientX - centerX;
+            const offsetY = event.clientY - centerY;
+            const distance = Math.min(Math.hypot(offsetX, offsetY), radius);
+            const angle = Math.atan2(offsetY, offsetX);
+            const limitedX = Math.cos(angle) * distance;
+            const limitedY = Math.sin(angle) * distance;
 
-          <div className="mobile-hrow">
-            <button
-              className="mobile-control left"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.a = true;
-              }}
-              onPointerUp={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.a = false;
-              }}
-              onPointerLeave={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.a = false;
-              }}
-              onPointerCancel={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.a = false;
-              }}
-            >
-              ◀
-            </button>
+            touchMoveRef.current = {
+              x: Number((limitedX / radius).toFixed(3)),
+              y: Number((limitedY / radius).toFixed(3)),
+              active: true,
+            };
 
-            <button
-              className="mobile-control down"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.s = true;
-              }}
-              onPointerUp={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.s = false;
-              }}
-              onPointerLeave={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.s = false;
-              }}
-              onPointerCancel={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.s = false;
-              }}
-            >
-              ▼
-            </button>
+            const knob = base.querySelector(".joystick-knob");
+            if (knob) {
+              knob.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+            }
 
-            <button
-              className="mobile-control right"
-              onPointerDown={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.d = true;
-              }}
-              onPointerUp={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.d = false;
-              }}
-              onPointerLeave={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.d = false;
-              }}
-              onPointerCancel={(event) => {
-                event.preventDefault();
-                touchKeysRef.current.d = false;
-              }}
-            >
-              ▶
-            </button>
-          </div>
+            base.setPointerCapture(event.pointerId);
+            event.preventDefault();
+          }}
+          onPointerMove={(event) => {
+            if (!touchMoveRef.current.active) return;
+
+            const base = event.currentTarget;
+            const rect = base.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const radius = rect.width / 2 - 10;
+            const offsetX = event.clientX - centerX;
+            const offsetY = event.clientY - centerY;
+            const distance = Math.min(Math.hypot(offsetX, offsetY), radius);
+            const angle = Math.atan2(offsetY, offsetX);
+            const limitedX = Math.cos(angle) * distance;
+            const limitedY = Math.sin(angle) * distance;
+
+            touchMoveRef.current = {
+              x: Number((limitedX / radius).toFixed(3)),
+              y: Number((limitedY / radius).toFixed(3)),
+              active: true,
+            };
+
+            const knob = base.querySelector(".joystick-knob");
+            if (knob) {
+              knob.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+            }
+          }}
+          onPointerUp={(event) => {
+            touchMoveRef.current = { x: 0, y: 0, active: false };
+            const knob = event.currentTarget.querySelector(".joystick-knob");
+            if (knob) {
+              knob.style.transform = "translate(0px, 0px)";
+            }
+            event.currentTarget.releasePointerCapture(event.pointerId);
+            event.preventDefault();
+          }}
+          onPointerLeave={(event) => {
+            if (!touchMoveRef.current.active) return;
+            touchMoveRef.current = { x: 0, y: 0, active: false };
+            const knob = event.currentTarget.querySelector(".joystick-knob");
+            if (knob) {
+              knob.style.transform = "translate(0px, 0px)";
+            }
+            event.preventDefault();
+          }}
+          onPointerCancel={(event) => {
+            touchMoveRef.current = { x: 0, y: 0, active: false };
+            const knob = event.currentTarget.querySelector(".joystick-knob");
+            if (knob) {
+              knob.style.transform = "translate(0px, 0px)";
+            }
+            event.preventDefault();
+          }}
+        >
+          <div className="joystick-knob" />
         </div>
 
         <button

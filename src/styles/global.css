@@ -255,6 +255,39 @@ body {
   display: none;
 }
 
+.mobile-joystick {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 245, 255, 0.8);
+  background: rgba(11, 11, 11, 0.72);
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.26);
+  touch-action: none;
+}
+
+.mobile-joystick::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 245, 255, 0.45);
+}
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42px;
+  height: 42px;
+  margin-left: -21px;
+  margin-top: -21px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00f5ff, #006d82);
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.8);
+  transition: transform 0.06s linear;
+}
+
 .controls span {
   padding: 8px 12px;
 
@@ -1027,19 +1060,6 @@ body {
     touch-action: none;
   }
 
-  .mobile-dpad {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .mobile-hrow {
-    display: flex;
-    gap: 8px;
-  }
-
-  .mobile-control,
   .mobile-fire {
     border: 1px solid #00f5ff;
     background: rgba(11, 11, 11, 0.9);
@@ -1049,16 +1069,6 @@ body {
     box-shadow: 0 0 12px rgba(0, 245, 255, 0.2);
     touch-action: none;
     user-select: none;
-  }
-
-  .mobile-control {
-    width: 54px;
-    height: 54px;
-    border-radius: 12px;
-    font-size: 20px;
-  }
-
-  .mobile-fire {
     width: 110px;
     height: 110px;
     border-radius: 50%;
