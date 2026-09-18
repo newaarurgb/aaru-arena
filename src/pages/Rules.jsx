@@ -31,6 +31,13 @@ const enemies = [
   ["SHOOTER", "Keeps its distance and fires enemy projectiles."],
 ];
 
+const environments = [
+  ["NEON PRIME", "Electric city grid"],
+  ["MARS RIFT", "Red dust frontier"],
+  ["CRYO MOON", "Frozen satellite"],
+  ["VOID ORBIT", "Deep-space anomaly"],
+];
+
 function Rules() {
   return (
     <main className="rules-page">
@@ -89,6 +96,24 @@ function Rules() {
               <div><kbd>MOUSE</kbd><span>AIM AND FIRE</span></div>
               <div><kbd>JOYSTICK</kbd><span>MOBILE MOVE</span></div>
               <div><kbd>TOUCH</kbd><span>MOBILE AIM AND FIRE</span></div>
+            </div>
+          </section>
+
+          <section className="rules-block customization-rules-block">
+            <div className="rules-block-heading">
+              <span>PLANET LOADOUTS</span>
+              <span className="rules-line" />
+            </div>
+            <p className="feature-rule-text">
+              Choose an environment and player design before deployment. Each planet changes the arena atmosphere, grid, and colors; designs change your player shell and glow.
+            </p>
+            <div className="environment-rule-list">
+              {environments.map(([name, description]) => (
+                <div key={name}>
+                  <strong>{name}</strong>
+                  <span>{description}</span>
+                </div>
+              ))}
             </div>
           </section>
         </div>

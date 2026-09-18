@@ -1,5 +1,5 @@
 class Player {
-  constructor(x, y) {
+  constructor(x, y, design = "aqua") {
     this.x = x;
     this.y = y;
 
@@ -15,6 +15,7 @@ class Player {
 
     // Direction the player is facing
     this.direction = "down";
+    this.design = design;
 
     // Attack settings
     this.attackRange = 75;
@@ -87,10 +88,17 @@ class Player {
   }
 
   draw(ctx) {
-    // Player body
-    ctx.fillStyle = "#00f5ff";
+    const designs = {
+      aqua: { body: "#00f5ff", core: "#ffffff", accent: "#00f5ff" },
+      solar: { body: "#ffb000", core: "#fff4bd", accent: "#ff5b22" },
+      toxic: { body: "#8cff00", core: "#efffcf", accent: "#d000ff" },
+    };
+    const colors = designs[this.design] || designs.aqua;
 
-    ctx.shadowColor = "#00f5ff";
+    // Player body
+    ctx.fillStyle = colors.body;
+
+    ctx.shadowColor = colors.body;
     ctx.shadowBlur = 20;
 
     ctx.fillRect(
@@ -103,7 +111,7 @@ class Player {
     ctx.shadowBlur = 0;
 
     // Player core
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = colors.core;
 
     ctx.fillRect(
       this.x + 12,
@@ -113,7 +121,7 @@ class Player {
     );
 
     // Direction indicator
-    ctx.fillStyle = "#00f5ff";
+    ctx.fillStyle = colors.accent;
 
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
