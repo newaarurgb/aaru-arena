@@ -257,19 +257,20 @@ body {
 
 .mobile-joystick {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
   border: 2px solid rgba(0, 245, 255, 0.8);
   background: rgba(11, 11, 11, 0.72);
   box-shadow: 0 0 18px rgba(0, 245, 255, 0.26);
   touch-action: none;
+  flex-shrink: 0;
 }
 
 .mobile-joystick::before {
   content: "";
   position: absolute;
-  inset: 18px;
+  inset: 22px;
   border-radius: 50%;
   border: 1px solid rgba(0, 245, 255, 0.45);
 }
@@ -278,10 +279,10 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 42px;
-  height: 42px;
-  margin-left: -21px;
-  margin-top: -21px;
+  width: 52px;
+  height: 52px;
+  margin-left: -26px;
+  margin-top: -26px;
   border-radius: 50%;
   background: radial-gradient(circle, #00f5ff, #006d82);
   box-shadow: 0 0 14px rgba(0, 245, 255, 0.8);
@@ -1055,9 +1056,10 @@ body {
     justify-content: space-between;
     align-items: center;
     width: min(92vw, 500px);
-    margin: 12px auto 8px;
+    margin: 6px auto 10px;
     gap: 12px;
     touch-action: none;
+    padding-bottom: 4px;
   }
 
   .controls {

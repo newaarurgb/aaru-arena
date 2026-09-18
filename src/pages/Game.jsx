@@ -1588,22 +1588,22 @@ function Game() {
     // MOUSE MOVEMENT
     // ===================================================
 
-    const handleMouseMove =
+    const updateAimFromPointer =
       (event) => {
         const rect =
           canvas.getBoundingClientRect();
 
         mouseRef.current.x =
-          (event.clientX -
+          ((event.clientX -
             rect.left) *
-          (canvas.width /
-            rect.width);
+            canvas.width) /
+          rect.width;
 
         mouseRef.current.y =
-          (event.clientY -
+          ((event.clientY -
             rect.top) *
-          (canvas.height /
-            rect.height);
+            canvas.height) /
+          rect.height;
       };
 
     // ===================================================
@@ -1612,7 +1612,7 @@ function Game() {
 
     const handleMouseDown =
       (event) => {
-        if (event.button !== 0) {
+        if (event.pointerType === "mouse" && event.button !== 0) {
           return;
         }
 
@@ -1628,6 +1628,8 @@ function Game() {
           return;
         }
 
+        updateAimFromPointer(event);
+
         // Start continuous shooting
         shootingRef.current =
           true;
@@ -1639,84 +1641,49 @@ function Game() {
 
     const handleMouseUp =
       (event) => {
-        if (event.button === 0) {
-          shootingRef.current =
-            false;
-        }
-      };
-
-    const handleTouchAim =
-      (event) => {
-        const rect =
-          canvas.getBoundingClientRect();
-        const touches =
-          event.touches && event.touches.length
-            ? event.touches
-            : [event];
-
-        const point =
-          touches[0];
-
-        if (!point) {
+        if (event.pointerType === "mouse") {
+          if (event.button === 0) {
+            shootingRef.current =
+              false;
+          }
           return;
         }
 
-        mouseRef.current.x =
-          (point.clientX -
-            rect.left) *
-          (canvas.width /
-            rect.width);
-
-        mouseRef.current.y =
-          (point.clientY -
-            rect.top) *
-          (canvas.height /
-            rect.height);
-
-        shootingRef.current =
-          true;
+        shootingRef.current = false;
       };
 
-    const handleTouchEnd =
-      () => {
-        shootingRef.current =
-          false;
+    const handlePointerMove =
+      (event) => {
+        if (
+          event.pointerType === "touch" ||
+          event.pointerType === "mouse"
+        ) {
+          updateAimFromPointer(event);
+        }
       };
 
     canvas.addEventListener(
-      "mousemove",
-      handleMouseMove
+      "pointermove",
+      handlePointerMove
     );
 
     canvas.addEventListener(
-      "mousedown",
+      "pointerdown",
       handleMouseDown
     );
 
     canvas.addEventListener(
-      "touchstart",
-      handleTouchAim,
-      { passive: false }
+      "pointerup",
+      handleMouseUp
     );
 
     canvas.addEventListener(
-      "touchmove",
-      handleTouchAim,
-      { passive: false }
-    );
-
-    canvas.addEventListener(
-      "touchend",
-      handleTouchEnd
-    );
-
-    canvas.addEventListener(
-      "touchcancel",
-      handleTouchEnd
+      "pointerleave",
+      handleMouseUp
     );
 
     window.addEventListener(
-      "mouseup",
+      "pointerup",
       handleMouseUp
     );
 
@@ -2489,13 +2456,23 @@ function Game() {
       );
 
       canvas.removeEventListener(
-        "mousemove",
-        handleMouseMove
+        "pointermove",
+        handlePointerMove
       );
 
       canvas.removeEventListener(
-        "mousedown",
+        "pointerdown",
         handleMouseDown
+      );
+
+      canvas.removeEventListener(
+        "pointerup",
+        handleMouseUp
+      );
+
+      canvas.removeEventListener(
+        "pointerleave",
+        handleMouseUp
       );
     };
   }, [
