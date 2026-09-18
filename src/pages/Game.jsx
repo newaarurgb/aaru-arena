@@ -2961,14 +2961,14 @@ function Game() {
               <p className="lobby-step-label">03 // LOADOUT</p>
               <div className="loadout-link-grid">
                 <Link className="loadout-link-button" to="/environment">
-                  <span>PLANET</span>
-                  <strong>{ENVIRONMENTS[environment]?.name || "NEON PRIME"}</strong>
-                  <small>CHOOSE ENVIRONMENT</small>
+                  <span>LOADOUT 01</span>
+                  <strong>ENVIRONMENTS</strong>
+                  <small>SELECT: {ENVIRONMENTS[environment]?.name || "NEON PRIME"}</small>
                 </Link>
                 <Link className="loadout-link-button" to="/style">
-                  <span>PLAYER STYLE</span>
-                  <strong>{PLAYER_DESIGNS[playerDesign]?.name || "AQUA CORE"}</strong>
-                  <small>CHOOSE DESIGN</small>
+                  <span>LOADOUT 02</span>
+                  <strong>PLAYER STYLES</strong>
+                  <small>SELECT: {PLAYER_DESIGNS[playerDesign]?.name || "AQUA CORE"}</small>
                 </Link>
               </div>
             </div>
