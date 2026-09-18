@@ -54,7 +54,11 @@ class Spawner {
       .filter((point) => distanceFromPlayer(point) >= safeRadius)
       .sort((first, second) => distanceFromPlayer(second) - distanceFromPlayer(first));
 
-    return safePoints[0] || points.sort(
+    if (safePoints.length > 0) {
+      return safePoints[index % safePoints.length];
+    }
+
+    return points.sort(
       (first, second) => distanceFromPlayer(second) - distanceFromPlayer(first)
     )[0];
   }
