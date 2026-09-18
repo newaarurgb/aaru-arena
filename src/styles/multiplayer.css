@@ -108,88 +108,45 @@
   text-align: center !important;
 }
 
-  .customization-step {
-    margin-top: 16px;
-    padding-top: 4px;
-    border-top: 1px solid rgba(0, 255, 255, 0.14);
+  .loadout-links-step {
+    margin-top: 14px;
   }
 
-  .customization-group {
-    margin-top: 12px;
-  }
-
-  .customization-label {
-    margin: 0 0 7px !important;
-    color: #8f9aa8 !important;
-    font: 700 10px/1.2 monospace !important;
-    letter-spacing: 1.5px !important;
-    text-align: left !important;
-  }
-
-  .theme-options,
-  .design-options {
+  .loadout-link-grid {
     display: grid;
-    gap: 7px;
-  }
-
-  .theme-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
-  .theme-option,
-  .design-option {
-    min-height: 42px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: rgba(255, 255, 255, 0.035);
-    color: #ffffff;
-    cursor: pointer;
-    text-align: left;
+  .loadout-link-button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-height: 68px;
+    padding: 11px 13px;
+    border: 1px solid rgba(0, 229, 183, 0.35);
+    background: rgba(0, 229, 183, 0.04);
+    color: #fff;
+    text-decoration: none;
   }
 
-  .theme-option {
-    display: grid;
-    gap: 3px;
-    padding: 8px 10px;
-    border-left: 3px solid var(--theme-accent);
+  .loadout-link-button:hover {
+    border-color: #00e5b7;
+    background: rgba(0, 229, 183, 0.1);
   }
 
-  .theme-option span,
-  .design-option span {
-    font-size: 10px;
-    font-weight: 900;
+  .loadout-link-button span,
+  .loadout-link-button small {
+    color: #8f9aa8;
+    font: 700 9px monospace;
     letter-spacing: 1px;
   }
 
-  .theme-option small {
-    color: #8f9aa8;
-    font: 10px monospace;
-  }
-
-  .theme-option.selected,
-  .design-option.selected {
-    border-color: var(--theme-accent, #00ffff);
-    box-shadow: 0 0 14px color-mix(in srgb, var(--theme-accent, #00ffff) 24%, transparent);
-    background: rgba(0, 255, 255, 0.08);
-  }
-
-  .design-options {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .design-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border-color: color-mix(in srgb, var(--design-color) 45%, #ffffff 10%);
-  }
-
-  .design-swatch {
-    width: 14px;
-    height: 14px;
-    flex: 0 0 auto;
-    background: var(--design-color);
-    box-shadow: 0 0 10px var(--design-color);
+  .loadout-link-button strong {
+    color: #00e5b7;
+    font-size: 13px;
+    letter-spacing: 1px;
   }
 
 /* IMPORTANT:
@@ -370,11 +327,7 @@
   .multiplayer-lobby-overlay {
     padding: 14px !important;
 
-  .theme-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .design-options {
+  .loadout-link-grid {
     grid-template-columns: 1fr;
   }
   }

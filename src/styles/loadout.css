@@ -1,0 +1,185 @@
+.loadout-page {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  overflow-y: auto;
+  color: #f4f7f8;
+  background: #05090d;
+}
+
+.loadout-panel {
+  width: min(940px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: clamp(22px, 4vw, 44px);
+  border: 1px solid rgba(0, 229, 183, 0.45);
+  background: rgba(5, 12, 17, 0.95);
+  box-shadow: 0 0 42px rgba(0, 229, 183, 0.12);
+}
+
+.loadout-kicker,
+.loadout-subtitle,
+.loadout-action,
+.loadout-card em {
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.loadout-kicker {
+  margin: 0 0 9px;
+  color: #00e5b7;
+  font: 11px monospace;
+}
+
+.loadout-panel h1 {
+  margin: 0;
+  color: #fff;
+  font: 900 clamp(26px, 5vw, 52px)/1 "Arial Black", sans-serif;
+  letter-spacing: 3px;
+}
+
+.loadout-subtitle {
+  margin: 13px 0 26px;
+  color: #8ea4a9;
+  font-size: 11px;
+}
+
+.loadout-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.environment-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.style-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.loadout-card {
+  position: relative;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--loadout-accent) 45%, #ffffff 10%);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--loadout-base, #06151d) 88%, #fff 4%), #05090d);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.loadout-card::before {
+  content: "";
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  top: 16px;
+  right: 16px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--loadout-accent) 60%, transparent);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--loadout-accent) 30%, transparent), inset 0 0 24px color-mix(in srgb, var(--loadout-accent) 20%, transparent);
+}
+
+.loadout-card:hover,
+.loadout-card.selected {
+  border-color: var(--loadout-accent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--loadout-accent) 28%, transparent);
+}
+
+.loadout-planet {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  top: 40px;
+  right: 40px;
+  border-radius: 50%;
+  background: var(--loadout-accent);
+  box-shadow: 0 0 24px var(--loadout-accent);
+  opacity: 0.68;
+}
+
+.loadout-card strong,
+.loadout-card small,
+.loadout-card em {
+  position: relative;
+  z-index: 1;
+}
+
+.loadout-card strong {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.loadout-card small {
+  color: #a9b8bb;
+  font: 11px monospace;
+}
+
+.loadout-card em {
+  margin-top: 4px;
+  color: var(--loadout-accent);
+  font: 10px monospace;
+  font-style: normal;
+}
+
+.style-preview {
+  position: absolute;
+  top: 24px;
+  right: 46px;
+  width: 48px;
+  height: 48px;
+  background: var(--loadout-accent);
+  box-shadow: 0 0 25px var(--loadout-accent);
+}
+
+.style-preview i {
+  position: absolute;
+  inset: 13px;
+  background: #fff;
+}
+
+.loadout-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.loadout-action {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid rgba(0, 229, 183, 0.42);
+  color: #dffef7;
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.loadout-action:hover {
+  color: #061014;
+  background: #00e5b7;
+}
+
+@media (max-width: 650px) {
+  .loadout-page { align-items: flex-start; }
+  .loadout-panel { max-height: calc(100dvh - 24px); padding: 20px 15px; }
+  .environment-grid,
+  .style-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .loadout-card { min-height: 128px; padding: 11px; }
+  .loadout-card::before { width: 76px; height: 76px; top: 12px; right: 12px; }
+  .loadout-planet { width: 42px; height: 42px; top: 29px; right: 29px; }
+  .style-preview { width: 34px; height: 34px; top: 22px; right: 29px; }
+  .style-preview i { inset: 9px; }
+  .loadout-actions { flex-direction: column; }
+}

@@ -4,6 +4,8 @@ import Home from "./pages/Home";
 import Game from "./pages/Game";
 import Leaderboard from "./pages/LeaderBoard";
 import Rules from "./pages/Rules";
+import EnvironmentSelect from "./pages/EnvironmentSelect";
+import StyleSelect from "./pages/StyleSelect";
 
 function App() {
   return (
@@ -13,6 +15,8 @@ function App() {
         <Route path="/game" element={<Game />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/rules" element={<Rules />} />
+        <Route path="/environment" element={<EnvironmentSelect />} />
+        <Route path="/style" element={<StyleSelect />} />
       </Routes>
     </HashRouter>
   );

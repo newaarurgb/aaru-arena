@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import "../styles/rules.css";
+import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
 
 const rules = [
   {
@@ -29,13 +30,6 @@ const enemies = [
   ["RUNNER", "Fast enemy that closes distance quickly."],
   ["TANK", "Slow, durable enemy with heavy contact damage."],
   ["SHOOTER", "Keeps its distance and fires enemy projectiles."],
-];
-
-const environments = [
-  ["NEON PRIME", "Electric city grid"],
-  ["MARS RIFT", "Red dust frontier"],
-  ["CRYO MOON", "Frozen satellite"],
-  ["VOID ORBIT", "Deep-space anomaly"],
 ];
 
 function Rules() {
@@ -108,11 +102,18 @@ function Rules() {
               Choose an environment and player design before deployment. Each planet changes the arena atmosphere, grid, and colors; designs change your player shell and glow.
             </p>
             <div className="environment-rule-list">
-              {environments.map(([name, description]) => (
-                <div key={name}>
-                  <strong>{name}</strong>
-                  <span>{description}</span>
+              {Object.values(ENVIRONMENTS).map((environment) => (
+                <div key={environment.name}>
+                  <strong>{environment.name}</strong>
+                  <span>{environment.description}</span>
                 </div>
+              ))}
+            </div>
+            <div className="style-rule-list">
+              {Object.values(PLAYER_DESIGNS).map((design) => (
+                <span key={design.name} style={{ "--style-color": design.color }}>
+                  {design.name}
+                </span>
               ))}
             </div>
           </section>

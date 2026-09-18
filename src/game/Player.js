@@ -92,6 +92,9 @@ class Player {
       aqua: { body: "#00f5ff", core: "#ffffff", accent: "#00f5ff" },
       solar: { body: "#ffb000", core: "#fff4bd", accent: "#ff5b22" },
       toxic: { body: "#8cff00", core: "#efffcf", accent: "#d000ff" },
+      ruby: { body: "#ff3158", core: "#ffe1e8", accent: "#ff3158" },
+      violet: { body: "#c56bff", core: "#f5ddff", accent: "#7b2cff" },
+      frost: { body: "#baf5ff", core: "#ffffff", accent: "#5c9dff" },
     };
     const colors = designs[this.design] || designs.aqua;
 

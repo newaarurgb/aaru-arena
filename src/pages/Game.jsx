@@ -11,47 +11,7 @@ import Spawner from "../game/Spawner";
 import Progression from "../game/Progression";
 import Projectile from "../game/Projectile";
 import PowerUp from "../game/PowerUp";
-
-const ENVIRONMENTS = {
-  neon: {
-    name: "NEON PRIME",
-    description: "Electric city grid",
-    base: "#050505",
-    grid: "rgba(0,255,255,0.08)",
-    border: "rgba(0,255,255,0.35)",
-    accent: "#00f5ff",
-  },
-  mars: {
-    name: "MARS RIFT",
-    description: "Red dust frontier",
-    base: "#180b0a",
-    grid: "rgba(255,112,57,0.12)",
-    border: "rgba(255,112,57,0.5)",
-    accent: "#ff7039",
-  },
-  ice: {
-    name: "CRYO MOON",
-    description: "Frozen satellite",
-    base: "#07151d",
-    grid: "rgba(151,232,255,0.14)",
-    border: "rgba(151,232,255,0.55)",
-    accent: "#97e8ff",
-  },
-  void: {
-    name: "VOID ORBIT",
-    description: "Deep-space anomaly",
-    base: "#0d0619",
-    grid: "rgba(205,91,255,0.13)",
-    border: "rgba(205,91,255,0.5)",
-    accent: "#cd5bff",
-  },
-};
-
-const PLAYER_DESIGNS = {
-  aqua: { name: "AQUA CORE", color: "#00f5ff" },
-  solar: { name: "SOLAR FLARE", color: "#ffb000" },
-  toxic: { name: "TOXIC PULSE", color: "#8cff00" },
-};
+import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
 
 class BossEnemy {
   constructor(x, y) {
@@ -226,8 +186,12 @@ function Game() {
   const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
   const [gameMode, setGameMode] = useState("solo");
-  const [environment, setEnvironment] = useState("neon");
-  const [playerDesign, setPlayerDesign] = useState("aqua");
+  const [environment, setEnvironment] = useState(
+    () => sessionStorage.getItem("aaruEnvironment") || "neon"
+  );
+  const [playerDesign, setPlayerDesign] = useState(
+    () => sessionStorage.getItem("aaruPlayerDesign") || "aqua"
+  );
   const [roomCode, setRoomCode] = useState("");
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
@@ -2597,6 +2561,10 @@ function Game() {
           setHealth(playerRef.current.health);
         }
 
+        // Refill again before the next wave is mounted so the HUD and player
+        // state cannot carry damaged health into the new wave.
+        playerRef.current.health = playerRef.current.maxHealth || 100;
+        setHealth(playerRef.current.health);
         setWaveCleared(true);
 
         shootingRef.current = false;
@@ -2989,42 +2957,19 @@ function Game() {
               )}
             </div>
 
-            <div className="lobby-step customization-step">
+            <div className="lobby-step loadout-links-step">
               <p className="lobby-step-label">03 // LOADOUT</p>
-              <div className="customization-group">
-                <p className="customization-label">PLANET ENVIRONMENT</p>
-                <div className="theme-options">
-                  {Object.entries(ENVIRONMENTS).map(([key, scene]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`theme-option ${environment === key ? "selected" : ""}`}
-                      style={{ "--theme-accent": scene.accent }}
-                      onClick={() => setEnvironment(key)}
-                    >
-                      <span>{scene.name}</span>
-                      <small>{scene.description}</small>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="customization-group">
-                <p className="customization-label">PLAYER DESIGN</p>
-                <div className="design-options">
-                  {Object.entries(PLAYER_DESIGNS).map(([key, design]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      className={`design-option ${playerDesign === key ? "selected" : ""}`}
-                      style={{ "--design-color": design.color }}
-                      onClick={() => setPlayerDesign(key)}
-                    >
-                      <span className="design-swatch" />
-                      <span>{design.name}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="loadout-link-grid">
+                <Link className="loadout-link-button" to="/environment">
+                  <span>PLANET</span>
+                  <strong>{ENVIRONMENTS[environment]?.name || "NEON PRIME"}</strong>
+                  <small>CHOOSE ENVIRONMENT</small>
+                </Link>
+                <Link className="loadout-link-button" to="/style">
+                  <span>PLAYER STYLE</span>
+                  <strong>{PLAYER_DESIGNS[playerDesign]?.name || "AQUA CORE"}</strong>
+                  <small>CHOOSE DESIGN</small>
+                </Link>
               </div>
             </div>
 

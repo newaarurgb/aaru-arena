@@ -227,6 +227,22 @@
   font-size: 11px;
 }
 
+.style-rule-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.style-rule-list span {
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--style-color) 55%, transparent);
+  color: var(--style-color);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
 .rules-actions {
   display: flex;
   gap: 12px;
