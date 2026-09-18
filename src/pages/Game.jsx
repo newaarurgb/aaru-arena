@@ -1523,6 +1523,7 @@ function Game() {
       const viewportWidth = viewport?.width || window.innerWidth;
       const viewportHeight = viewport?.height || window.innerHeight;
       const isMobileViewport = viewportWidth <= 650;
+      const isLandscapeViewport = viewportWidth > viewportHeight;
 
       canvas.width =
         Math.min(
@@ -1533,8 +1534,12 @@ function Game() {
       canvas.height =
         Math.min(
           Math.max(
-            isMobileViewport ? 240 : 360,
-            viewportHeight - (isMobileViewport ? 250 : 180)
+            isMobileViewport ? 300 : 360,
+            viewportHeight - (
+              isMobileViewport
+                ? isLandscapeViewport ? 120 : 190
+                : 180
+            )
           ),
           650
         );

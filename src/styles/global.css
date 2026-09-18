@@ -259,7 +259,9 @@ body {
 
 .game-canvas {
   display: block;
+  width: min(100%, 1000px);
   max-width: 100%;
+  height: auto;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -1101,9 +1103,8 @@ body {
     width: 100%;
   }
 
-  .arena-wrapper canvas {
+  .game-canvas {
     width: 100%;
-    height: auto;
   }
 
   .mobile-controls {
