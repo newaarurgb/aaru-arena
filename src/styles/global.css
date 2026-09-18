@@ -286,10 +286,9 @@ body {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
   z-index: 120;
-  min-width: 74px;
-  min-height: 38px;
-  padding: 8px 12px;
-    bottom: calc(150px + env(safe-area-inset-bottom));
+  width: 64px;
+  height: 32px;
+  padding: 4px 8px;
   background: rgba(2, 2, 2, 0.88);
   color: #00f5ff;
   font-size: 11px;
@@ -816,6 +815,10 @@ body {
   .pause-button {
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
+    width: 60px;
+    height: 30px;
+    padding: 3px 6px;
+    font-size: 10px;
   }
 
 /* =========================================================
