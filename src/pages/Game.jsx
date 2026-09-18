@@ -213,7 +213,8 @@ function Game() {
     }
 
     const sounds = {
-      shoot: { frequency: 520, duration: 0.045, endFrequency: 240, volume: 0.035 },
+      shoot: { frequency: 920, duration: 0.075, endFrequency: 260, volume: 0.045 },
+      click: { frequency: 720, duration: 0.035, endFrequency: 520, volume: 0.035 },
       hit: { frequency: 180, duration: 0.06, endFrequency: 90, volume: 0.045 },
       defeat: { frequency: 110, duration: 0.16, endFrequency: 55, volume: 0.07 },
       damage: { frequency: 75, duration: 0.18, endFrequency: 42, volume: 0.08 },
@@ -226,7 +227,7 @@ function Game() {
     const gain = audioContext.createGain();
     const now = audioContext.currentTime;
 
-    oscillator.type = type === "damage" || type === "defeat" ? "sawtooth" : "sine";
+    oscillator.type = type === "shoot" ? "square" : type === "click" ? "triangle" : type === "damage" || type === "defeat" ? "sawtooth" : "sine";
     oscillator.frequency.setValueAtTime(sound.frequency, now);
     oscillator.frequency.exponentialRampToValueAtTime(sound.endFrequency, now + sound.duration);
     gain.gain.setValueAtTime(sound.volume, now);
@@ -235,6 +236,20 @@ function Game() {
     gain.connect(audioContext.destination);
     oscillator.start(now);
     oscillator.stop(now + sound.duration);
+
+    if (type === "shoot") {
+      const sparkle = audioContext.createOscillator();
+      const sparkleGain = audioContext.createGain();
+      sparkle.type = "sine";
+      sparkle.frequency.setValueAtTime(1800, now);
+      sparkle.frequency.exponentialRampToValueAtTime(700, now + 0.035);
+      sparkleGain.gain.setValueAtTime(0.018, now);
+      sparkleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+      sparkle.connect(sparkleGain);
+      sparkleGain.connect(audioContext.destination);
+      sparkle.start(now);
+      sparkle.stop(now + 0.035);
+    }
   };
 
   const triggerScreenShake = (amount) => {
@@ -370,7 +385,7 @@ function Game() {
   };
 
   const startArena = () => {
-    playSound("level");
+    playSound("click");
     const cleanName = playerName.trim().slice(0, 16);
 
     if (!cleanName) {
@@ -3044,6 +3059,7 @@ function Game() {
                 <button
                   className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
                   onClick={() => {
+                    playSound("click");
                     setGameMode("multiplayer");
                     setMultiplayerError("");
                   }}
@@ -3093,7 +3109,10 @@ function Game() {
 
                 <button
                   className="restart-button connect-room-button"
-                  onClick={connectMultiplayer}
+                  onClick={() => {
+                    playSound("click");
+                    connectMultiplayer();
+                  }}
                 >
                   JOIN ROOM
                 </button>
@@ -3329,6 +3348,7 @@ function Game() {
             className="pause-button"
             type="button"
             onClick={() => {
+              playSound("click");
               setPaused((value) => {
                 shootingRef.current = value;
                 return !value;
@@ -3347,7 +3367,10 @@ function Game() {
                 <button
                   className="restart-button"
                   type="button"
-                  onClick={() => setPaused(false)}
+                  onClick={() => {
+                    playSound("click");
+                    setPaused(false);
+                  }}
                 >
                   RESUME MATCH
                 </button>
@@ -3568,9 +3591,10 @@ function Game() {
               <div className="upgrade-options">
 
                 <button
-                  onClick={
-                    applyPowerUpgrade
-                  }
+                  onClick={() => {
+                    playSound("click");
+                    applyPowerUpgrade();
+                  }}
                 >
                   <strong>
                     POWER
@@ -3582,9 +3606,10 @@ function Game() {
                 </button>
 
                 <button
-                  onClick={
-                    applySpeedUpgrade
-                  }
+                  onClick={() => {
+                    playSound("click");
+                    applySpeedUpgrade();
+                  }}
                 >
                   <strong>
                     SPEED
@@ -3596,9 +3621,10 @@ function Game() {
                 </button>
 
                 <button
-                  onClick={
-                    applyVitalityUpgrade
-                  }
+                  onClick={() => {
+                    playSound("click");
+                    applyVitalityUpgrade();
+                  }}
                 >
                   <strong>
                     VITALITY
