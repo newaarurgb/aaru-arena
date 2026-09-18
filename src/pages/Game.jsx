@@ -97,6 +97,8 @@ function Game() {
   const touchKeysRef = useRef({});
   const shootingRef = useRef(false);
   const lastShotRef = useRef(0);
+  const audioContextRef = useRef(null);
+  const screenShakeRef = useRef(0);
 
   // =====================================================
   // ANIMATION
@@ -196,6 +198,48 @@ function Game() {
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
+
+  const playSound = (type) => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextClass();
+    }
+
+    const audioContext = audioContextRef.current;
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+
+    const sounds = {
+      shoot: { frequency: 520, duration: 0.045, endFrequency: 240, volume: 0.035 },
+      hit: { frequency: 180, duration: 0.06, endFrequency: 90, volume: 0.045 },
+      defeat: { frequency: 110, duration: 0.16, endFrequency: 55, volume: 0.07 },
+      damage: { frequency: 75, duration: 0.18, endFrequency: 42, volume: 0.08 },
+      wave: { frequency: 440, duration: 0.28, endFrequency: 880, volume: 0.07 },
+      level: { frequency: 660, duration: 0.35, endFrequency: 1320, volume: 0.06 },
+      victory: { frequency: 330, duration: 0.7, endFrequency: 990, volume: 0.09 },
+    };
+    const sound = sounds[type] || sounds.hit;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+
+    oscillator.type = type === "damage" || type === "defeat" ? "sawtooth" : "sine";
+    oscillator.frequency.setValueAtTime(sound.frequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(sound.endFrequency, now + sound.duration);
+    gain.gain.setValueAtTime(sound.volume, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + sound.duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + sound.duration);
+  };
+
+  const triggerScreenShake = (amount) => {
+    screenShakeRef.current = Math.max(screenShakeRef.current, amount);
+  };
 
   const getMultiplayerUrl = () => {
     if (import.meta.env.VITE_WS_URL) {
@@ -326,6 +370,7 @@ function Game() {
   };
 
   const startArena = () => {
+    playSound("level");
     const cleanName = playerName.trim().slice(0, 16);
 
     if (!cleanName) {
@@ -567,6 +612,8 @@ function Game() {
   // =====================================================
 
   function handleEnemyDefeated() {
+    playSound("defeat");
+    triggerScreenShake(3);
     const progression =
       progressionRef.current;
 
@@ -599,6 +646,7 @@ function Game() {
     );
 
     if (leveledUp) {
+      playSound("level");
       levelUpRef.current = true;
 
       setLevelUp(true);
@@ -606,6 +654,8 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
+    playSound("victory");
+    triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
     progression.score += 1000;
@@ -631,6 +681,8 @@ function Game() {
     damage,
     dead = false
   ) {
+    playSound(dead ? "defeat" : "hit");
+    if (dead) triggerScreenShake(5);
     // -----------------------------------------------------
     // DAMAGE NUMBER
     // -----------------------------------------------------
@@ -648,6 +700,16 @@ function Game() {
       maxLife: 45,
 
       velocityY: -1.2,
+    });
+
+    effectsRef.current.push({
+      type: "ring",
+      x,
+      y,
+      radius: dead ? 10 : 5,
+      growth: dead ? 4 : 2,
+      life: dead ? 24 : 14,
+      maxLife: dead ? 24 : 14,
     });
 
     // -----------------------------------------------------
@@ -720,6 +782,10 @@ function Game() {
       ) {
         effect.y +=
           effect.velocityY;
+      }
+
+      if (effect.type === "ring") {
+        effect.radius += effect.growth;
       }
 
       if (
@@ -819,6 +885,16 @@ function Game() {
           );
 
           ctx.fill();
+        }
+
+        if (effect.type === "ring") {
+          ctx.strokeStyle = "#00ffff";
+          ctx.lineWidth = 2;
+          ctx.shadowColor = "#00ffff";
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+          ctx.stroke();
         }
 
         ctx.restore();
@@ -2211,6 +2287,8 @@ function Game() {
           mouseRef.current.y
         );
 
+      playSound("shoot");
+
       // =================================================
       // DAMAGE BOOST
       // =================================================
@@ -2275,6 +2353,16 @@ function Game() {
 
     function gameLoop() {
       drawArena();
+
+      if (screenShakeRef.current > 0) {
+        const shake = screenShakeRef.current;
+        canvas.style.transform = `translate(${(Math.random() - 0.5) * shake}px, ${(Math.random() - 0.5) * shake}px)`;
+        screenShakeRef.current *= 0.82;
+        if (screenShakeRef.current < 0.2) {
+          screenShakeRef.current = 0;
+          canvas.style.transform = "";
+        }
+      }
 
       if (!gameStarted) {
         drawRemotePlayers(ctx);
@@ -2368,6 +2456,8 @@ function Game() {
             if (distance < 28) {
               if (!shieldRef.current) {
                 player.health -= bullet.damage || 12;
+                playSound("damage");
+                triggerScreenShake(4);
 
                 setHealth(
                   Math.max(0, player.health)
@@ -2567,6 +2657,9 @@ function Game() {
         setHealth(playerRef.current.health);
         setWaveCleared(true);
 
+        playSound("wave");
+        triggerScreenShake(7);
+
         shootingRef.current = false;
       }
 
@@ -2591,6 +2684,12 @@ function Game() {
 
     return () => {
       shootingRef.current = false;
+      canvas.style.transform = "";
+
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
 
       cancelAnimationFrame(
         animationRef.current
