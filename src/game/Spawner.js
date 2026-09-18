@@ -68,15 +68,19 @@ class Spawner {
 
     // Wave 1 = 5 enemies, then +2 every wave.
     // Wave 2 = 7, Wave 3 = 9, Wave 4 = 11, etc.
-    const enemyCount = 5 + (safeWave - 1) * 2;
     const safeRadius = 220 + safeWave * 25;
+    let spawnIndex = 0;
 
-    for (let i = 0; i < enemyCount; i++) {
+    // Wave 1 = 5, Wave 2 = 5 + 7, Wave 3 = 5 + 7 + 9, etc.
+    for (let batchWave = 1; batchWave <= safeWave; batchWave++) {
+      const batchCount = 5 + (batchWave - 1) * 2;
+
+      for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
       const spawn = Spawner.getSafeSpawnPoint(
         width,
         height,
         player,
-        i,
+        spawnIndex,
         40,
         40,
         safeRadius
@@ -85,11 +89,11 @@ class Spawner {
       let type = "grunt";
       const random = Math.random();
 
-      if (safeWave === 1) {
+      if (batchWave === 1) {
         type = "grunt";
-      } else if (safeWave === 2) {
+      } else if (batchWave === 2) {
         type = random < 0.35 ? "runner" : "grunt";
-      } else if (safeWave === 3) {
+      } else if (batchWave === 3) {
         if (random < 0.20) {
           type = "tank";
         } else if (random < 0.55) {
@@ -113,10 +117,13 @@ class Spawner {
         new Enemy(
           spawn.x,
           spawn.y,
-          safeWave,
+          batchWave,
           type
         )
       );
+
+      spawnIndex++;
+      }
     }
 
     // Always return the actual array. Game.jsx uses this to
