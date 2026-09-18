@@ -183,6 +183,7 @@ function Game() {
   const [scoreSaved, setScoreSaved] = useState(false);
 
   const [gameStarted, setGameStarted] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [gameMode, setGameMode] = useState("solo");
   const [roomCode, setRoomCode] = useState("");
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
@@ -2218,6 +2219,12 @@ function Game() {
         return;
       }
 
+      if (paused) {
+        drawRemotePlayers(ctx);
+        animationRef.current = requestAnimationFrame(gameLoop);
+        return;
+      }
+
       if (!gameOver) {
         updatePlayer(
           keys,
@@ -2574,6 +2581,7 @@ function Game() {
     attackEffect,
     victory,
     gameStarted,
+    paused,
     gameMode,
   ]);
 
@@ -2741,6 +2749,7 @@ function Game() {
     pendingStartRef.current = false;
 
     setGameStarted(false);
+    setPaused(false);
     setMultiplayerPlayers([]);
     setMultiplayerStatus("OFFLINE");
     setMultiplayerError("");
@@ -3130,6 +3139,40 @@ function Game() {
         className="game-canvas"
       />
 
+      {gameStarted && !gameOver && !victory && (
+        <>
+          <button
+            className="pause-button"
+            type="button"
+            onClick={() => {
+              setPaused((value) => {
+                shootingRef.current = value;
+                return !value;
+              });
+            }}
+            aria-label={paused ? "Resume game" : "Pause game"}
+          >
+            {paused ? "RESUME" : "PAUSE"}
+          </button>
+
+          {paused && (
+            <div className="pause-overlay">
+              <div className="overlay-box pause-box">
+                <p className="multiplayer-kicker">AARU ARENA // SYSTEM HOLD</p>
+                <h1>GAME PAUSED</h1>
+                <button
+                  className="restart-button"
+                  type="button"
+                  onClick={() => setPaused(false)}
+                >
+                  RESUME MATCH
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {/* =================================================
           MOBILE CONTROLS
       ================================================= */}
@@ -3212,6 +3255,7 @@ function Game() {
             event.stopPropagation();
           }}
           onPointerMove={(event) => {
+            event.stopPropagation();
             if (!touchMoveRef.current.active) return;
 
             const base = event.currentTarget;
@@ -3238,6 +3282,7 @@ function Game() {
             }
           }}
           onPointerUp={(event) => {
+            event.stopPropagation();
             touchMoveRef.current = { x: 0, y: 0, active: false };
             const knob = event.currentTarget.querySelector(".joystick-knob");
             if (knob) {
@@ -3248,15 +3293,10 @@ function Game() {
             event.stopPropagation();
           }}
           onPointerLeave={(event) => {
-            if (!touchMoveRef.current.active) return;
-            touchMoveRef.current = { x: 0, y: 0, active: false };
-            const knob = event.currentTarget.querySelector(".joystick-knob");
-            if (knob) {
-              knob.style.transform = "translate(0px, 0px)";
-            }
-            event.preventDefault();
+            event.stopPropagation();
           }}
           onPointerCancel={(event) => {
+            event.stopPropagation();
             touchMoveRef.current = { x: 0, y: 0, active: false };
             const knob = event.currentTarget.querySelector(".joystick-knob");
             if (knob) {

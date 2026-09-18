@@ -276,7 +276,49 @@ body {
   background: rgba(11, 11, 11, 0.72);
   box-shadow: 0 0 18px rgba(0, 245, 255, 0.26);
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
   flex-shrink: 0;
+}
+
+.pause-button {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 120;
+  min-width: 74px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #00f5ff;
+  background: rgba(2, 2, 2, 0.88);
+  color: #00f5ff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pause-button:hover {
+  background: #00f5ff;
+  color: #020202;
+}
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 4, 10, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.pause-box {
+  width: min(92vw, 440px);
+  text-align: center;
 }
 
 .mobile-joystick::before {
@@ -769,6 +811,11 @@ body {
   touch-action: none;
     -webkit-tap-highlight-color: transparent;
 }
+
+  .pause-button {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+  }
 
 /* =========================================================
    AARU ARENA — LEVEL UP SCREEN
