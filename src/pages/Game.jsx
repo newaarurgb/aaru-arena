@@ -1519,15 +1519,19 @@ function Game() {
     // ===================================================
 
     const resizeCanvas = () => {
+      const viewport = window.visualViewport;
+      const viewportWidth = viewport?.width || window.innerWidth;
+      const viewportHeight = viewport?.height || window.innerHeight;
+
       canvas.width =
         Math.min(
-          window.innerWidth - 40,
+          Math.max(280, viewportWidth - 40),
           1000
         );
 
       canvas.height =
         Math.min(
-          window.innerHeight - 180,
+          Math.max(360, viewportHeight - 180),
           650
         );
     };
@@ -1535,6 +1539,11 @@ function Game() {
     resizeCanvas();
 
     window.addEventListener(
+      "resize",
+      resizeCanvas
+    );
+
+    window.visualViewport?.addEventListener(
       "resize",
       resizeCanvas
     );
@@ -2486,6 +2495,11 @@ function Game() {
       );
 
       window.removeEventListener(
+        "resize",
+        resizeCanvas
+      );
+
+      window.visualViewport?.removeEventListener(
         "resize",
         resizeCanvas
       );
