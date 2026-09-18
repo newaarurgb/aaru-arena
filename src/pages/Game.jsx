@@ -162,8 +162,18 @@ function Game() {
   const [attackEffect, setAttackEffect] = useState(false);
 
   const [powerUpMessage, setPowerUpMessage] = useState("");
-  const [joystickPos, setJoystickPos] = useState({ x: 18, y: window.innerHeight * 0.58 });
-  const joystickDragRef = useRef({ active: false, pointerId: null, startX: 0, startY: 0, originX: 18, originY: window.innerHeight * 0.58 });
+  const [joystickPos, setJoystickPos] = useState({
+    x: Math.min(28, window.innerWidth * 0.08),
+    y: Math.min(window.innerHeight * 0.6, window.innerHeight - 210),
+  });
+  const joystickDragRef = useRef({
+    active: false,
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    originX: Math.min(28, window.innerWidth * 0.08),
+    originY: Math.min(window.innerHeight * 0.6, window.innerHeight - 210),
+  });
 
   // =====================================================
   // LEADERBOARD
@@ -3043,7 +3053,10 @@ function Game() {
 
       <div
         className="mobile-controls"
-        style={{ left: `${joystickPos.x}px`, top: `${joystickPos.y}px` }}
+        style={{
+          left: `${Math.min(Math.max(joystickPos.x, 20), Math.max(20, window.innerWidth - 170))}px`,
+          top: `${Math.min(Math.max(joystickPos.y, 120), Math.max(120, window.innerHeight - 170))}px`,
+        }}
         onPointerDown={(event) => {
           const target = event.target;
           if (target instanceof HTMLElement && target.closest(".mobile-joystick")) {
@@ -3071,8 +3084,8 @@ function Game() {
           const dy = event.clientY - joystickDragRef.current.startY;
 
           setJoystickPos({
-            x: Math.max(8, Math.min(window.innerWidth - 180, joystickDragRef.current.originX + dx)),
-            y: Math.max(80, Math.min(window.innerHeight - 180, joystickDragRef.current.originY + dy)),
+            x: Math.max(20, Math.min(window.innerWidth - 170, joystickDragRef.current.originX + dx)),
+            y: Math.max(120, Math.min(window.innerHeight - 170, joystickDragRef.current.originY + dy)),
           });
         }}
         onPointerUp={(event) => {

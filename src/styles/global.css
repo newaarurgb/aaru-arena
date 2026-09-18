@@ -1053,9 +1053,6 @@ body {
 @media (max-width: 650px) {
   .mobile-controls {
     position: fixed;
-    left: 50%;
-    top: 56%;
-    transform: translate(-50%, -50%);
     display: flex;
     justify-content: center;
     align-items: center;
