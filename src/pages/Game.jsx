@@ -1645,6 +1645,44 @@ function Game() {
         }
       };
 
+    const handleTouchAim =
+      (event) => {
+        const rect =
+          canvas.getBoundingClientRect();
+        const touches =
+          event.touches && event.touches.length
+            ? event.touches
+            : [event];
+
+        const point =
+          touches[0];
+
+        if (!point) {
+          return;
+        }
+
+        mouseRef.current.x =
+          (point.clientX -
+            rect.left) *
+          (canvas.width /
+            rect.width);
+
+        mouseRef.current.y =
+          (point.clientY -
+            rect.top) *
+          (canvas.height /
+            rect.height);
+
+        shootingRef.current =
+          true;
+      };
+
+    const handleTouchEnd =
+      () => {
+        shootingRef.current =
+          false;
+      };
+
     canvas.addEventListener(
       "mousemove",
       handleMouseMove
@@ -1653,6 +1691,28 @@ function Game() {
     canvas.addEventListener(
       "mousedown",
       handleMouseDown
+    );
+
+    canvas.addEventListener(
+      "touchstart",
+      handleTouchAim,
+      { passive: false }
+    );
+
+    canvas.addEventListener(
+      "touchmove",
+      handleTouchAim,
+      { passive: false }
+    );
+
+    canvas.addEventListener(
+      "touchend",
+      handleTouchEnd
+    );
+
+    canvas.addEventListener(
+      "touchcancel",
+      handleTouchEnd
     );
 
     window.addEventListener(
@@ -3087,28 +3147,6 @@ function Game() {
         >
           <div className="joystick-knob" />
         </div>
-
-        <button
-          className="mobile-fire"
-          onPointerDown={(event) => {
-            event.preventDefault();
-            shootingRef.current = true;
-          }}
-          onPointerUp={(event) => {
-            event.preventDefault();
-            shootingRef.current = false;
-          }}
-          onPointerLeave={(event) => {
-            event.preventDefault();
-            shootingRef.current = false;
-          }}
-          onPointerCancel={(event) => {
-            event.preventDefault();
-            shootingRef.current = false;
-          }}
-        >
-          FIRE
-        </button>
       </div>
 
       {/* =================================================
