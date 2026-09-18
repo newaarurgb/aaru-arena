@@ -92,6 +92,7 @@ function Game() {
     y: 0,
   });
 
+  const touchKeysRef = useRef({});
   const shootingRef = useRef(false);
   const lastShotRef = useRef(0);
 
@@ -1650,7 +1651,7 @@ function Game() {
     // KEYBOARD
     // ===================================================
 
-    const keys = {};
+    const keys = touchKeysRef.current;
 
     const handleKeyDown =
       (event) => {
@@ -2983,6 +2984,126 @@ function Game() {
         ref={canvasRef}
         className="game-canvas"
       />
+
+      {/* =================================================
+          MOBILE CONTROLS
+      ================================================= */}
+
+      <div className="mobile-controls">
+        <div className="mobile-dpad">
+          <button
+            className="mobile-control up"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              touchKeysRef.current.w = true;
+            }}
+            onPointerUp={(event) => {
+              event.preventDefault();
+              touchKeysRef.current.w = false;
+            }}
+            onPointerLeave={(event) => {
+              event.preventDefault();
+              touchKeysRef.current.w = false;
+            }}
+            onPointerCancel={(event) => {
+              event.preventDefault();
+              touchKeysRef.current.w = false;
+            }}
+          >
+            ▲
+          </button>
+
+          <div className="mobile-hrow">
+            <button
+              className="mobile-control left"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.a = true;
+              }}
+              onPointerUp={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.a = false;
+              }}
+              onPointerLeave={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.a = false;
+              }}
+              onPointerCancel={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.a = false;
+              }}
+            >
+              ◀
+            </button>
+
+            <button
+              className="mobile-control down"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.s = true;
+              }}
+              onPointerUp={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.s = false;
+              }}
+              onPointerLeave={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.s = false;
+              }}
+              onPointerCancel={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.s = false;
+              }}
+            >
+              ▼
+            </button>
+
+            <button
+              className="mobile-control right"
+              onPointerDown={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.d = true;
+              }}
+              onPointerUp={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.d = false;
+              }}
+              onPointerLeave={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.d = false;
+              }}
+              onPointerCancel={(event) => {
+                event.preventDefault();
+                touchKeysRef.current.d = false;
+              }}
+            >
+              ▶
+            </button>
+          </div>
+        </div>
+
+        <button
+          className="mobile-fire"
+          onPointerDown={(event) => {
+            event.preventDefault();
+            shootingRef.current = true;
+          }}
+          onPointerUp={(event) => {
+            event.preventDefault();
+            shootingRef.current = false;
+          }}
+          onPointerLeave={(event) => {
+            event.preventDefault();
+            shootingRef.current = false;
+          }}
+          onPointerCancel={(event) => {
+            event.preventDefault();
+            shootingRef.current = false;
+          }}
+        >
+          FIRE
+        </button>
+      </div>
 
       {/* =================================================
           CONTROLS
