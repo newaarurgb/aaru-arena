@@ -3180,8 +3180,9 @@ function Game() {
       <div
         className="mobile-controls"
         style={{
-          left: `${Math.min(Math.max(joystickPos.x, 12), Math.max(12, (window.visualViewport?.width || window.innerWidth) - 156))}px`,
-          top: `${Math.min(Math.max(joystickPos.y, 84), Math.max(84, (window.visualViewport?.height || window.innerHeight) - ((window.visualViewport?.height || window.innerHeight) < 500 ? 12 : 190)))}px`,
+          left: "16px",
+          top: "50%",
+          transform: "translateY(-50%)",
         }}
         onPointerDown={(event) => {
           const target = event.target;
