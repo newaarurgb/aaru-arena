@@ -1160,12 +1160,23 @@ function Game() {
     }
 
     if (touchMoveRef.current.active) {
-      dx += touchMoveRef.current.x;
-      dy += touchMoveRef.current.y;
+      const joystickX = touchMoveRef.current.x;
+      const joystickY = touchMoveRef.current.y;
+
+      // Aim opposite to the movement stick for mobile shooting.
+      const aimDistance = 180;
+      mouseRef.current.x =
+        currentPlayer.x +
+        currentPlayer.width / 2 -
+        joystickX * aimDistance;
+      mouseRef.current.y =
+        currentPlayer.y +
+        currentPlayer.height / 2 -
+        joystickY * aimDistance;
 
       if (Math.abs(touchMoveRef.current.x) > 0.15 || Math.abs(touchMoveRef.current.y) > 0.15) {
-        const moveX = touchMoveRef.current.x;
-        const moveY = touchMoveRef.current.y;
+        const moveX = joystickX;
+        const moveY = joystickY;
 
         if (Math.abs(moveX) > Math.abs(moveY)) {
           currentPlayer.direction = moveX > 0 ? "right" : "left";
@@ -2809,17 +2820,6 @@ function Game() {
               <p className="lobby-step-label">02 // GAME MODE</p>
               <div className="multiplayer-mode-buttons">
                 <button
-                  className={`restart-button ${gameMode === "solo" ? "mode-active" : ""}`}
-                  onClick={() => {
-                    setGameMode("solo");
-                    setMultiplayerError("");
-                    disconnectMultiplayer();
-                  }}
-                >
-                  SOLO
-                </button>
-
-                <button
                   className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
                   onClick={() => {
                     setGameMode("multiplayer");
@@ -2829,6 +2829,9 @@ function Game() {
                   MULTIPLAYER
                 </button>
               </div>
+              {gameMode === "solo" && (
+                <p className="solo-default-note">SOLO MODE DEFAULT</p>
+              )}
             </div>
 
             {gameMode === "multiplayer" && (

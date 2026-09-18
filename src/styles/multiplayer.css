@@ -100,6 +100,14 @@
   margin: 14px 0 !important;
 }
 
+.solo-default-note {
+  margin: 8px 0 0 !important;
+  color: #7f9298 !important;
+  font: 700 10px/1.2 monospace !important;
+  letter-spacing: 2px !important;
+  text-align: center !important;
+}
+
 /* IMPORTANT:
    The global .restart-button styles were collapsing the lobby
    buttons. These explicit rules override them safely.
