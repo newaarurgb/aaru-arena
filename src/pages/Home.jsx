@@ -39,6 +39,14 @@ function Home() {
             <span>🏆</span>
             LEADERBOARD
           </button>
+
+          <button
+            className="rules-home-button"
+            onClick={() => navigate("/rules")}
+          >
+            <span>?</span>
+            RULES
+          </button>
         </div>
 
         <div className="home-status">

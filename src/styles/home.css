@@ -79,7 +79,8 @@
 }
 
 .play-button,
-.leaderboard-home-button {
+.leaderboard-home-button,
+.rules-home-button {
   min-width: 220px;
   padding: 17px 25px;
   border-radius: 4px;
@@ -113,6 +114,19 @@
   transform: translateY(-3px);
   background: rgba(255, 204, 0, 0.1);
   box-shadow: 0 0 28px rgba(255, 204, 0, 0.35);
+}
+
+.rules-home-button {
+  border: 1px solid #00e5b7;
+  background: rgba(0, 229, 183, 0.04);
+  color: #00e5b7;
+  box-shadow: 0 0 15px rgba(0, 229, 183, 0.12);
+}
+
+.rules-home-button:hover {
+  transform: translateY(-3px);
+  background: rgba(0, 229, 183, 0.1);
+  box-shadow: 0 0 28px rgba(0, 229, 183, 0.35);
 }
 
 .home-status {
@@ -149,7 +163,8 @@
   }
 
   .play-button,
-  .leaderboard-home-button {
+  .leaderboard-home-button,
+  .rules-home-button {
     width: min(320px, 90vw);
   }
 }

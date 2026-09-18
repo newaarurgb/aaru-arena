@@ -1,0 +1,226 @@
+.rules-page {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 42px 20px;
+  color: #f4f7f8;
+  background: #071015;
+  font-family: "Rajdhani", "Trebuchet MS", sans-serif;
+}
+
+.rules-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: linear-gradient(#16313a 1px, transparent 1px), linear-gradient(90deg, #16313a 1px, transparent 1px);
+  background-size: 42px 42px;
+  transform: perspective(600px) rotateX(45deg) scale(1.7);
+  transform-origin: center bottom;
+}
+
+.rules-glow {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border: 1px solid rgba(0, 229, 183, 0.22);
+  border-radius: 50%;
+  box-shadow: 0 0 100px rgba(0, 229, 183, 0.1), inset 0 0 80px rgba(0, 229, 183, 0.08);
+}
+
+.rules-panel {
+  position: relative;
+  width: min(980px, 100%);
+  border: 1px solid rgba(0, 229, 183, 0.46);
+  background: rgba(7, 16, 21, 0.92);
+  box-shadow: 0 0 42px rgba(0, 229, 183, 0.12);
+  padding: clamp(24px, 5vw, 52px);
+}
+
+.rules-header {
+  border-bottom: 1px solid rgba(0, 229, 183, 0.28);
+  padding-bottom: 22px;
+  margin-bottom: 26px;
+}
+
+.rules-kicker,
+.rules-subtitle,
+.rules-block-heading,
+.rules-action,
+.control-grid span,
+.rule-number {
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.rules-kicker {
+  color: #00e5b7;
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.rules-header h1 {
+  color: #ffffff;
+  font-family: "Arial Black", "Trebuchet MS", sans-serif;
+  font-size: clamp(32px, 6vw, 64px);
+  letter-spacing: 5px;
+  line-height: 0.95;
+  margin: 0;
+}
+
+.rules-subtitle {
+  color: #9bb5b9;
+  font-size: 12px;
+  margin: 14px 0 0;
+}
+
+.rules-sections {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 28px 42px;
+}
+
+.rules-block-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #00e5b7;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.rules-line {
+  height: 1px;
+  flex: 1;
+  background: rgba(0, 229, 183, 0.32);
+}
+
+.rules-list,
+.enemy-list {
+  display: grid;
+  gap: 14px;
+}
+
+.rule-item {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rule-number {
+  color: #ffce4a;
+  font-size: 13px;
+}
+
+.rule-item h2 {
+  color: #ffffff;
+  font-size: 16px;
+  letter-spacing: 1px;
+  margin: 0 0 4px;
+}
+
+.rule-item p,
+.enemy-row span:last-child {
+  color: #a8babe;
+  font-family: "Trebuchet MS", sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.enemy-row {
+  display: grid;
+  grid-template-columns: 14px 76px 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.enemy-row strong {
+  color: #ffffff;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.enemy-mark {
+  width: 10px;
+  height: 10px;
+  display: block;
+  transform: rotate(45deg);
+  background: #ff0055;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.enemy-runner { background: #ffff00; }
+.enemy-tank { background: #aa44ff; }
+.enemy-shooter { background: #00aaff; border-radius: 50%; transform: none; }
+
+.controls-block {
+  grid-column: 1 / -1;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.control-grid > div {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.control-grid kbd {
+  color: #ffce4a;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.control-grid span {
+  color: #829b9f;
+  font-size: 10px;
+}
+
+.rules-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(0, 229, 183, 0.28);
+}
+
+.rules-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid rgba(0, 229, 183, 0.52);
+  color: #dffef7;
+  text-decoration: none;
+  font-size: 11px;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.rules-action:hover,
+.rules-action.primary {
+  color: #061014;
+  background: #00e5b7;
+}
+
+@media (max-width: 700px) {
+  .rules-page { align-items: flex-start; padding: 20px 12px; overflow-y: auto; }
+  .rules-panel { padding: 22px 18px; }
+  .rules-sections { grid-template-columns: 1fr; gap: 24px; }
+  .control-grid { grid-template-columns: repeat(2, 1fr); }
+  .rules-actions { flex-direction: column; }
+  .rules-action { width: 100%; box-sizing: border-box; }
+}
