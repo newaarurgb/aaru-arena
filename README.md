@@ -12,6 +12,14 @@ The server generates six-character room codes, supports up to 10 players per roo
 
 For a deployed frontend, set `VITE_WS_URL` to the public `wss://` URL of the deployed WebSocket server. Vercel serves the frontend, but it does not run this long-lived WebSocket process.
 
+The included `render.yaml` can deploy the WebSocket server to Render. After deployment:
+
+1. Copy the Render service URL and change it to `wss://`.
+2. Add it as the Vercel environment variable `VITE_WS_URL`.
+3. Redeploy the Vercel frontend.
+
+Without this variable, multiplayer intentionally shows `SERVER URL REQUIRED` on the deployed site. Local development automatically uses `ws://localhost:3001`.
+
 ## Frontend
 
 ```bash

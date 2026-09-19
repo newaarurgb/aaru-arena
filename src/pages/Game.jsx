@@ -249,6 +249,10 @@ function Game() {
       return import.meta.env.VITE_WS_URL;
     }
 
+    if (!window.location.hostname.includes("localhost") && !window.location.hostname.includes("127.0.0.1")) {
+      return null;
+    }
+
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     return `${protocol}://${window.location.hostname}:3001`;
   };
@@ -289,7 +293,14 @@ function Game() {
     setMultiplayerStatus("CONNECTING...");
 
     try {
-      const socket = new WebSocket(getMultiplayerUrl());
+      const multiplayerUrl = getMultiplayerUrl();
+      if (!multiplayerUrl) {
+        setMultiplayerStatus("SERVER URL REQUIRED");
+        setMultiplayerError("SET VITE_WS_URL TO YOUR PUBLIC WSS MULTIPLAYER SERVER.");
+        return false;
+      }
+
+      const socket = new WebSocket(multiplayerUrl);
       multiplayerSocketRef.current = socket;
 
       socket.onopen = () => {

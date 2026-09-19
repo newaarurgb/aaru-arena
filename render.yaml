@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: aaru-arena-multiplayer
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm run multiplayer
+    envVars:
+      - key: NODE_VERSION
+        value: 20
