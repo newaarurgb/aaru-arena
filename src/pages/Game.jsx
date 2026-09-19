@@ -164,6 +164,24 @@ function Game() {
   const localPlayerIdRef = useRef(null);
   const pendingStartRef = useRef(false);
 
+  // Shared co-op world. The room host is the simulation authority.
+  // Other players send movement/shoot/melee actions to the host and
+  // receive the same enemies, projectiles, power-ups and wave state.
+  const multiplayerHostIdRef = useRef(null);
+  const isMultiplayerHostRef = useRef(false);
+  const sharedWorldRef = useRef({
+    enemies: [],
+    projectiles: [],
+    enemyProjectiles: [],
+    powerUps: [],
+    players: [],
+    wave: 1,
+    score: 0,
+    gameOver: false,
+    victory: false,
+  });
+  const lastSharedWorldBroadcastRef = useRef(0);
+
   // =====================================================
   // GAME STATE
   // =====================================================
@@ -245,20 +263,21 @@ function Game() {
   };
 
   const getMultiplayerUrl = () => {
+    // Explicit URL is useful for local development or a custom server.
     if (import.meta.env.VITE_WS_URL) {
       return import.meta.env.VITE_WS_URL;
     }
 
-    const isLocalhost =
+    // Local development uses the standalone ws server.
+    if (
       window.location.hostname.includes("localhost") ||
-      window.location.hostname.includes("127.0.0.1");
-
-    if (isLocalhost) {
+      window.location.hostname.includes("127.0.0.1")
+    ) {
       const protocol = window.location.protocol === "https:" ? "wss" : "ws";
       return `${protocol}://${window.location.hostname}:3001`;
     }
 
-    // Production: use the Vercel WebSocket endpoint.
+    // Vercel production WebSocket Function.
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     return `${protocol}://${window.location.host}/api/ws`;
   };
@@ -278,6 +297,161 @@ function Game() {
     localPlayerIdRef.current = null;
     setMultiplayerPlayers([]);
     setMultiplayerStatus("OFFLINE");
+  };
+
+  const sendCoopAction = (action) => {
+    if (gameMode !== "multiplayer") return;
+    const socket = multiplayerSocketRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    if (isMultiplayerHostRef.current) return;
+
+    socket.send(JSON.stringify({
+      type: "co_op_action",
+      action,
+    }));
+  };
+
+  const serializeEnemy = (enemy) => ({
+    x: Number(enemy.x) || 0,
+    y: Number(enemy.y) || 0,
+    width: Number(enemy.width) || 40,
+    height: Number(enemy.height) || 40,
+    type: enemy.type || "enemy",
+    health: Number(enemy.health) || 0,
+    maxHealth: Number(enemy.maxHealth) || 1,
+    damage: Number(enemy.damage) || 0,
+    hitFlash: Number(enemy.hitFlash) || 0,
+    hitTimer: Number(enemy.hitTimer) || 0,
+    pulse: Number(enemy.pulse) || 0,
+    spin: Number(enemy.spin) || 0,
+  });
+
+  const serializeProjectile = (projectile) => ({
+    x: Number(projectile.x) || 0,
+    y: Number(projectile.y) || 0,
+    radius: Number(projectile.radius) || 5,
+    damage: Number(projectile.damage) || 0,
+    velocityX: Number(projectile.velocityX) || 0,
+    velocityY: Number(projectile.velocityY) || 0,
+    life: Number(projectile.life) || 0,
+    bossShot: Boolean(projectile.bossShot),
+  });
+
+  const serializePowerUp = (powerUp) => ({
+    x: Number(powerUp.x) || 0,
+    y: Number(powerUp.y) || 0,
+    type: powerUp.type || "health",
+    radius: Number(powerUp.radius) || 16,
+    life: Number(powerUp.life) || 0,
+  });
+
+  const buildSharedWorld = () => {
+    const localPlayer = playerRef.current;
+    const players = [];
+
+    if (localPlayer && localPlayerIdRef.current) {
+      players.push({
+        id: localPlayerIdRef.current,
+        name: localPlayer.displayName || playerName || "PILOT",
+        avatar: localPlayer.avatar || 1,
+        x: Number(localPlayer.x) || 0,
+        y: Number(localPlayer.y) || 0,
+        health: Number(localPlayer.health) || 0,
+      });
+    }
+
+    Object.values(remotePlayersRef.current).forEach((member) => {
+      players.push({
+        id: member.id,
+        name: member.name || "PLAYER",
+        avatar: member.avatar || 1,
+        x: Number(member.x) || 0,
+        y: Number(member.y) || 0,
+        health: Number(member.health) || 0,
+      });
+    });
+
+    return {
+      enemies: enemiesRef.current.map(serializeEnemy),
+      projectiles: projectilesRef.current.map(serializeProjectile),
+      enemyProjectiles: enemyProjectilesRef.current.map(serializeProjectile),
+      powerUps: powerUpsRef.current.map(serializePowerUp),
+      players,
+      wave,
+      score: progressionRef.current.score || score,
+      gameOver,
+      victory,
+    };
+  };
+
+  const broadcastSharedWorld = () => {
+    if (gameMode !== "multiplayer" || !isMultiplayerHostRef.current) return;
+    const socket = multiplayerSocketRef.current;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({
+      type: "co_op_state",
+      state: buildSharedWorld(),
+    }));
+  };
+
+  const handleRemoteCoopAction = (message) => {
+    if (!isMultiplayerHostRef.current) return;
+    const action = message.action || {};
+    const playerId = String(action.playerId || "");
+    const remotePlayer = remotePlayersRef.current[playerId];
+    const canvas = canvasRef.current;
+
+    if (!remotePlayer || !canvas) return;
+
+    if (action.kind === "shoot") {
+      const startX = Number(remotePlayer.x) + 20;
+      const startY = Number(remotePlayer.y) + 20;
+      const targetX = Math.max(0, Math.min(1, Number(action.targetX) || 0.5)) * canvas.width;
+      const targetY = Math.max(0, Math.min(1, Number(action.targetY) || 0.5)) * canvas.height;
+      const projectile = new Projectile(startX, startY, targetX, targetY);
+
+      const requestedDamage = Number(action.damage);
+      if (Number.isFinite(requestedDamage) && requestedDamage > 0) {
+        projectile.damage = Math.min(250, requestedDamage);
+      }
+
+      projectilesRef.current.push(projectile);
+    }
+
+    if (action.kind === "melee") {
+      const px = Number(remotePlayer.x) + 20;
+      const py = Number(remotePlayer.y) + 20;
+      const attackRange = 85;
+
+      enemiesRef.current = enemiesRef.current.filter((enemy) => {
+        const ex = enemy.x + enemy.width / 2;
+        const ey = enemy.y + enemy.height / 2;
+        const distance = Math.hypot(ex - px, ey - py);
+
+        if (distance > attackRange) return true;
+
+        const damage = Math.max(1, Math.min(100, Number(action.damage) || 25));
+        const dead = enemy.takeDamage(damage);
+        createHitEffect(ex, ey, damage, dead);
+
+        if (distance > 0) {
+          enemy.x += ((ex - px) / distance) * 25;
+          enemy.y += ((ey - py) / distance) * 25;
+        }
+
+        if (dead) {
+          if (enemy.type === "boss") {
+            handleBossDefeated(ex, ey);
+          } else {
+            spawnPowerUp(ex, ey);
+            handleEnemyDefeated();
+          }
+          return false;
+        }
+        return true;
+      });
+    }
   };
 
   const connectMultiplayer = () => {
@@ -342,19 +516,30 @@ function Game() {
             const players = Array.isArray(message.players) ? message.players : [];
             const nextRemotePlayers = {};
 
-            players.forEach((player) => {
-              if (player.id !== localPlayerIdRef.current) {
-                nextRemotePlayers[player.id] = player;
+            multiplayerHostIdRef.current = message.hostId || null;
+            isMultiplayerHostRef.current =
+              Boolean(message.hostId && message.hostId === localPlayerIdRef.current);
+
+            players.forEach((member) => {
+              if (member.id !== localPlayerIdRef.current) {
+                nextRemotePlayers[member.id] = member;
               }
             });
 
             remotePlayersRef.current = nextRemotePlayers;
             setMultiplayerPlayers(players);
-            setMultiplayerStatus(`ONLINE // ${players.length} PLAYER${players.length === 1 ? "" : "S"}`);
+            setMultiplayerStatus(
+              `ONLINE // ${players.length} PLAYER${players.length === 1 ? "" : "S"}`
+            );
 
             if (message.started) {
               setGameStarted(true);
             }
+          }
+
+          if (message.type === "game_started") {
+            setGameStarted(true);
+            setMultiplayerStatus("MATCH LIVE");
           }
 
           if (message.type === "player_update" && message.player) {
@@ -381,16 +566,66 @@ function Game() {
             }
           }
 
-          if (message.type === "game_started") {
-            setGameStarted(true);
-            setMultiplayerStatus("MATCH LIVE");
+          // Host receives actions from every non-host player.
+          if (message.type === "co_op_action" && isMultiplayerHostRef.current) {
+            handleRemoteCoopAction(message);
+          }
+
+          // Non-host clients receive the host-authoritative shared world.
+          if (message.type === "co_op_state" && message.state) {
+            sharedWorldRef.current = message.state;
+
+            const players = Array.isArray(message.state.players)
+              ? message.state.players
+              : [];
+
+            players.forEach((member) => {
+              if (member.id !== localPlayerIdRef.current) {
+                remotePlayersRef.current[member.id] = member;
+              }
+
+              if (member.id === localPlayerIdRef.current && playerRef.current) {
+                const nextHealth = Number(member.health);
+                if (Number.isFinite(nextHealth)) {
+                  playerRef.current.health = nextHealth;
+                  setHealth(Math.max(0, nextHealth));
+                }
+              }
+            });
+
+            if (!isMultiplayerHostRef.current) {
+              if (Number.isFinite(Number(message.state.wave))) {
+                setWave(Number(message.state.wave));
+              }
+              if (Number.isFinite(Number(message.state.score))) {
+                setScore(Number(message.state.score));
+              }
+              const sharedEnemies = Array.isArray(message.state.enemies) ? message.state.enemies : [];
+              setEnemiesLeft(sharedEnemies.length);
+
+              // Keep lightweight enemy coordinates locally for mobile auto-aim.
+              enemiesRef.current = sharedEnemies.map((enemy) => ({
+                x: Number(enemy.x) || 0,
+                y: Number(enemy.y) || 0,
+                width: Number(enemy.width) || 40,
+                height: Number(enemy.height) || 40,
+              }));
+
+              if (message.state.victory && !victory) {
+                setVictory(true);
+              }
+              if (message.state.gameOver && !gameOver) {
+                setGameOver(true);
+              }
+            }
           }
 
           if (message.type === "error") {
             setMultiplayerError(message.message || "MULTIPLAYER SERVER ERROR.");
             setMultiplayerStatus("ERROR");
           }
-        } catch {
+        } catch (error) {
+          console.error("AARU ARENA multiplayer message error:", error);
           setMultiplayerError("INVALID SERVER MESSAGE.");
         }
       };
@@ -1787,6 +2022,7 @@ function Game() {
     // enemies were created so an empty array can NEVER clear
     // a wave that has not actually started.
     if (
+      (gameMode !== "multiplayer" || isMultiplayerHostRef.current) &&
       spawnedWaveRef.current !== wave &&
       !waveClearedRef.current &&
       !gameOver &&
@@ -1978,7 +2214,18 @@ function Game() {
         ) {
           event.preventDefault();
 
-          performMeleeAttack();
+          if (gameMode === "multiplayer" && !isMultiplayerHostRef.current) {
+            const currentPlayer = playerRef.current;
+            sendCoopAction({
+              kind: "melee",
+              playerId: localPlayerIdRef.current,
+              damage: currentPlayer?.attackDamage || 25,
+            });
+            setAttackEffect(true);
+            window.setTimeout(() => setAttackEffect(false), 150);
+          } else {
+            performMeleeAttack();
+          }
         }
       };
 
@@ -2357,6 +2604,18 @@ function Game() {
         return;
       }
 
+      if (gameMode === "multiplayer" && !isMultiplayerHostRef.current) {
+        sendCoopAction({
+          kind: "shoot",
+          playerId: localPlayerIdRef.current,
+          targetX: canvasRef.current ? mouseRef.current.x / canvasRef.current.width : 0.5,
+          targetY: canvasRef.current ? mouseRef.current.y / canvasRef.current.height : 0.5,
+          damage: (currentPlayer.attackDamage || 25) * (damageBoostRef.current ? 1.5 : 1),
+        });
+        lastShotRef.current = now;
+        return;
+      }
+
       const projectile =
         new Projectile(
           currentPlayer.x +
@@ -2394,6 +2653,91 @@ function Game() {
         now;
     }
 
+    function drawSharedWorld(context) {
+      const world = sharedWorldRef.current || {};
+      const enemies = Array.isArray(world.enemies) ? world.enemies : [];
+      const projectiles = Array.isArray(world.projectiles) ? world.projectiles : [];
+      const enemyProjectiles = Array.isArray(world.enemyProjectiles) ? world.enemyProjectiles : [];
+      const powerUps = Array.isArray(world.powerUps) ? world.powerUps : [];
+
+      enemies.forEach((enemy) => {
+        const x = Number(enemy.x) || 0;
+        const y = Number(enemy.y) || 0;
+        const w = Number(enemy.width) || 40;
+        const h = Number(enemy.height) || 40;
+        const hp = Math.max(0, Math.min(1, (Number(enemy.health) || 0) / Math.max(1, Number(enemy.maxHealth) || 1)));
+
+        context.save();
+        if (enemy.type === "boss") {
+          const cx = x + w / 2;
+          const cy = y + h / 2;
+          context.shadowColor = "#ff0055";
+          context.shadowBlur = 28;
+          context.strokeStyle = "#ff0055";
+          context.lineWidth = 3;
+          context.beginPath();
+          context.arc(cx, cy, 52 + Math.sin(Number(enemy.pulse) || 0) * 5, 0, Math.PI * 2);
+          context.stroke();
+          context.fillStyle = "#aa0044";
+          context.beginPath();
+          context.arc(cx, cy, 38, 0, Math.PI * 2);
+          context.fill();
+        } else {
+          const enemyColor = enemy.type === "shooter" ? "#00aaff" : enemy.type === "fast" ? "#ffff00" : enemy.type === "tank" ? "#ff8800" : "#ff3355";
+          context.shadowColor = enemyColor;
+          context.shadowBlur = 16;
+          context.strokeStyle = enemyColor;
+          context.lineWidth = 2;
+          context.strokeRect(x, y, w, h);
+          context.fillStyle = "rgba(255,255,255,0.08)";
+          context.fillRect(x, y, w, h);
+        }
+        context.shadowBlur = 0;
+        context.fillStyle = "#080808";
+        context.fillRect(x, y - 10, w, 5);
+        context.fillStyle = enemy.type === "boss" ? "#ff0055" : "#ff3355";
+        context.fillRect(x, y - 10, w * hp, 5);
+        context.restore();
+      });
+
+      projectiles.forEach((bullet) => {
+        context.save();
+        context.shadowColor = "#00ffff";
+        context.shadowBlur = 14;
+        context.fillStyle = "#00ffff";
+        context.beginPath();
+        context.arc(Number(bullet.x) || 0, Number(bullet.y) || 0, Number(bullet.radius) || 5, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+      });
+
+      enemyProjectiles.forEach((bullet) => {
+        context.save();
+        context.shadowColor = "#00aaff";
+        context.shadowBlur = 16;
+        context.fillStyle = "#00aaff";
+        context.beginPath();
+        context.arc(Number(bullet.x) || 0, Number(bullet.y) || 0, Number(bullet.radius) || 6, 0, Math.PI * 2);
+        context.fill();
+        context.restore();
+      });
+
+      powerUps.forEach((powerUp) => {
+        const x = Number(powerUp.x) || 0;
+        const y = Number(powerUp.y) || 0;
+        const type = powerUp.type || "health";
+        const symbols = { health: "♥", rapid: "⚡", damage: "✦", shield: "◆", magnet: "✚" };
+        context.save();
+        context.shadowColor = "#ffffff";
+        context.shadowBlur = 14;
+        context.fillStyle = "#ffffff";
+        context.font = "bold 22px Arial";
+        context.textAlign = "center";
+        context.fillText(symbols[type] || "◆", x + 16, y + 23);
+        context.restore();
+      });
+    }
+
     // ===================================================
     // DRAW REMOTE PLAYERS
     // ===================================================
@@ -2402,13 +2746,12 @@ function Game() {
       const remotePlayers = Object.values(remotePlayersRef.current);
 
       remotePlayers.forEach((remotePlayer) => {
-        const x = Number(remotePlayer.x);
-        const y = Number(remotePlayer.y);
-
-        if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        if (!Number.isFinite(remotePlayer.x) || !Number.isFinite(remotePlayer.y)) {
           return;
         }
 
+        const x = Number(remotePlayer.x);
+        const y = Number(remotePlayer.y);
         const width = 40;
         const height = 40;
         const hp = Math.max(
@@ -2417,38 +2760,24 @@ function Game() {
         );
 
         context.save();
-        context.translate(x + width / 2, y + height / 2);
 
-        // Team glow / body
+        // Remote player body.
+        context.translate(x + width / 2, y + height / 2);
         context.shadowColor = "#00ffff";
         context.shadowBlur = 18;
         context.strokeStyle = "#00ffff";
         context.lineWidth = 2;
-        context.strokeRect(
-          -width / 2,
-          -height / 2,
-          width,
-          height
-        );
+        context.strokeRect(-width / 2, -height / 2, width, height);
+        context.fillStyle = "rgba(0,255,255,0.16)";
+        context.fillRect(-width / 2, -height / 2, width, height);
 
-        context.fillStyle = "rgba(0,255,255,0.18)";
-        context.fillRect(
-          -width / 2,
-          -height / 2,
-          width,
-          height
-        );
-
-        // Player core
-        context.shadowColor = "#ffffff";
-        context.shadowBlur = 8;
+        // Direction/identity marker.
         context.fillStyle = "#ffffff";
         context.beginPath();
         context.arc(0, 0, 5, 0, Math.PI * 2);
         context.fill();
 
-        // Callsign
-        context.shadowBlur = 0;
+        // Callsign.
         context.fillStyle = "#00ffff";
         context.font = "700 11px monospace";
         context.textAlign = "center";
@@ -2458,10 +2787,9 @@ function Game() {
           -28
         );
 
-        // Health bar
-        context.fillStyle = "rgba(0,0,0,0.85)";
+        // Health bar.
+        context.fillStyle = "rgba(0,0,0,0.8)";
         context.fillRect(-24, 25, 48, 5);
-
         context.fillStyle = "#00ffff";
         context.fillRect(-24, 25, 48 * (hp / 100), 5);
 
@@ -2531,12 +2859,16 @@ function Game() {
           }
         }
 
-        updateShooting();
+        drawRemotePlayers(ctx);
 
-        updateEnemies(
-          canvas
-        );
+        // In co-op, the host owns the shared combat simulation.
+        // Other clients only send actions and render the host state.
+        if (gameMode !== "multiplayer" || isMultiplayerHostRef.current) {
+          updateShooting();
+          updateEnemies(canvas);
+        }
 
+        if (gameMode !== "multiplayer" || isMultiplayerHostRef.current) {
         // =====================================================
         // UPDATE ENEMY PROJECTILES
         // =====================================================
@@ -2628,10 +2960,28 @@ function Game() {
         updateEffects();
       }
 
+        }
+
+      // Host publishes one authoritative combat snapshot for the room.
+      if (
+        gameMode === "multiplayer" &&
+        isMultiplayerHostRef.current &&
+        performance.now() - lastSharedWorldBroadcastRef.current >= 80
+      ) {
+        broadcastSharedWorld();
+        lastSharedWorldBroadcastRef.current = performance.now();
+      }
+
+      // Non-host clients render the host's shared combat state.
+      if (gameMode === "multiplayer" && !isMultiplayerHostRef.current) {
+        drawSharedWorld(ctx);
+      }
+
       // =================================================
       // DRAW PROJECTILES
       // =================================================
 
+      if (gameMode !== "multiplayer" || isMultiplayerHostRef.current) {
       projectilesRef.current.forEach(
         (projectile) => {
           projectile.draw(ctx);
@@ -2657,6 +3007,7 @@ function Game() {
           enemy.draw(ctx);
         }
       );
+      }
 
       // =================================================
       // AIM
@@ -2716,14 +3067,6 @@ function Game() {
       }
 
       // =================================================
-      // REMOTE TEAMMATES
-      // =================================================
-
-      if (gameMode === "multiplayer") {
-        drawRemotePlayers(ctx);
-      }
-
-      // =================================================
       // SHIELD
       // =================================================
 
@@ -2746,7 +3089,9 @@ function Game() {
       // =================================================
 
       setEnemiesLeft(
-        enemiesRef.current.length
+        gameMode === "multiplayer" && !isMultiplayerHostRef.current
+          ? (Array.isArray(sharedWorldRef.current.enemies) ? sharedWorldRef.current.enemies.length : 0)
+          : enemiesRef.current.length
       );
 
       // =================================================
@@ -2762,6 +3107,7 @@ function Game() {
         enemiesRef.current.length === 0;
 
       if (
+        (gameMode !== "multiplayer" || isMultiplayerHostRef.current) &&
         waveActuallyStarted &&
         waveHasNoEnemies &&
         !waveCompletionLockedRef.current &&
@@ -2896,6 +3242,9 @@ function Game() {
 
       multiplayerSocketRef.current = null;
       remotePlayersRef.current = {};
+      multiplayerHostIdRef.current = null;
+      isMultiplayerHostRef.current = false;
+      sharedWorldRef.current = {};
     };
   }, []);
 
@@ -3041,6 +3390,9 @@ function Game() {
     multiplayerSocketRef.current = null;
     remotePlayersRef.current = {};
     localPlayerIdRef.current = null;
+    multiplayerHostIdRef.current = null;
+    isMultiplayerHostRef.current = false;
+    sharedWorldRef.current = {};
     lastNetworkSyncRef.current = 0;
     pendingStartRef.current = false;
 
