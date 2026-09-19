@@ -395,8 +395,8 @@ function Game() {
 
     socket.send(
       JSON.stringify({
-        type: "game_state",
-        game: buildSharedWorld(),
+        type: "co_op_state",
+        state: buildSharedWorld(),
       })
     );
   };
@@ -441,14 +441,7 @@ function Game() {
           })
         );
 
-        if (pendingStartRef.current) {
-          window.setTimeout(() => {
-            if (socket.readyState === WebSocket.OPEN) {
-              socket.send(JSON.stringify({ type: "start_game" }));
-            }
-          }, 150);
-          pendingStartRef.current = false;
-        }
+
       };
 
       socket.onmessage = (event) => {
@@ -491,8 +484,23 @@ function Game() {
               `ONLINE // ${players.length} PLAYER${players.length === 1 ? "" : "S"}`
             );
 
+            // Do not start the local game until the server confirms it.
+            // If this client is the host and Start was clicked before the
+            // room_state arrived, issue the start command now.
+            if (
+              pendingStartRef.current &&
+              isMultiplayerHostRef.current &&
+              socket.readyState === WebSocket.OPEN &&
+              !message.started
+            ) {
+              socket.send(JSON.stringify({ type: "start_game" }));
+              pendingStartRef.current = false;
+            }
+
             if (message.started) {
+              pendingStartRef.current = false;
               setGameStarted(true);
+              setMultiplayerStatus("MATCH LIVE");
             }
 
             return;
@@ -551,11 +559,12 @@ function Game() {
 
           // Non-host player fires. The server sends this to the host.
           if (
-            message.type === "player_fire" &&
+            message.type === "co_op_action" &&
             isMultiplayerHostRef.current &&
-            message.playerId !== localPlayerIdRef.current
+            message.action?.type === "player_fire" &&
+            message.action?.playerId !== localPlayerIdRef.current
           ) {
-            const data = message.projectile || {};
+            const data = message.action?.projectile || {};
             const x = Number(data.x);
             const y = Number(data.y);
             const vx = Number(data.velocityX);
@@ -588,12 +597,13 @@ function Game() {
 
           // Non-host player performs melee. The server sends this to the host.
           if (
-            message.type === "player_attack" &&
+            message.type === "co_op_action" &&
             isMultiplayerHostRef.current &&
-            message.playerId !== localPlayerIdRef.current
+            message.action?.type === "player_attack" &&
+            message.action?.playerId !== localPlayerIdRef.current
           ) {
-            const remote = remotePlayersRef.current[message.playerId];
-            const attack = message.attack || {};
+            const remote = remotePlayersRef.current[message.action?.playerId];
+            const attack = message.action?.attack || {};
 
             if (remote) {
               const px = Number(remote.x) + 20;
@@ -629,10 +639,10 @@ function Game() {
           }
 
           // Host broadcasts the complete shared world.
-          if (message.type === "game_state" && message.game) {
-            sharedWorldRef.current = message.game;
+          if (message.type === "co_op_state" && message.state) {
+            sharedWorldRef.current = message.state;
 
-            const shared = message.game;
+            const shared = message.state;
 
             if (Array.isArray(shared.players)) {
               shared.players.forEach((member) => {
@@ -764,12 +774,19 @@ function Game() {
 
     const socket = multiplayerSocketRef.current;
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "start_game" }));
+      if (isMultiplayerHostRef.current) {
+        socket.send(JSON.stringify({ type: "start_game" }));
+        pendingStartRef.current = false;
+      }
+      // Otherwise the player is a client; the host starts the room.
     }
 
-    // Start locally as well. The server broadcasts the same event to others.
-    setGameStarted(true);
-    setMultiplayerStatus("MATCH LIVE");
+    // Solo mode starts immediately. Multiplayer starts only after
+    // receiving the server's game_started message.
+    if (gameMode === "solo") {
+      setGameStarted(true);
+      setMultiplayerStatus("MATCH LIVE");
+    }
   };
 
   useEffect(() => {
@@ -1884,8 +1901,11 @@ function Game() {
       if (socket?.readyState === WebSocket.OPEN) {
         socket.send(
           JSON.stringify({
-            type: "player_attack",
-            attack: { damage },
+            type: "co_op_action",
+            action: {
+              type: "player_attack",
+              attack: { damage },
+            },
           })
         );
       }
@@ -2621,15 +2641,18 @@ function Game() {
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(
             JSON.stringify({
-              type: "player_fire",
-              projectile: {
-                x: startX,
-                y: startY,
-                velocityX,
-                velocityY,
-                radius: 5,
-                damage,
-                life: 180,
+              type: "co_op_action",
+              action: {
+                type: "player_fire",
+                projectile: {
+                  x: startX,
+                  y: startY,
+                  velocityX,
+                  velocityY,
+                  radius: 5,
+                  damage,
+                  life: 180,
+                },
               },
             })
           );
