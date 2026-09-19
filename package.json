@@ -13,8 +13,8 @@
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^7.18.4"
-    ,"ws": "^8.18.0"
+    "react-router-dom": "^7.18.4",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
