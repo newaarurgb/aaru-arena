@@ -245,21 +245,20 @@ function Game() {
   };
 
   const getMultiplayerUrl = () => {
-    // Explicit URL is useful for local development or a custom server.
     if (import.meta.env.VITE_WS_URL) {
       return import.meta.env.VITE_WS_URL;
     }
 
-    // Local development uses the standalone ws server.
-    if (
+    const isLocalhost =
       window.location.hostname.includes("localhost") ||
-      window.location.hostname.includes("127.0.0.1")
-    ) {
+      window.location.hostname.includes("127.0.0.1");
+
+    if (isLocalhost) {
       const protocol = window.location.protocol === "https:" ? "wss" : "ws";
       return `${protocol}://${window.location.hostname}:3001`;
     }
 
-    // Vercel production WebSocket Function.
+    // Production: use the Vercel WebSocket endpoint.
     const protocol = window.location.protocol === "https:" ? "wss" : "ws";
     return `${protocol}://${window.location.host}/api/ws`;
   };
@@ -358,13 +357,6 @@ function Game() {
             }
           }
 
-          if (message.type === "game_started") {
-            setGameStarted(true);
-            setMultiplayerStatus("MATCH LIVE");
-          }
-
-          // Live movement/health update from another player.
-          // The server sends these to every other member of the room.
           if (message.type === "player_update" && message.player) {
             const remotePlayer = message.player;
 
@@ -386,12 +378,12 @@ function Game() {
                     : 100,
                 },
               };
-
-              // Keep the HUD player count/status responsive to live joins.
-              setMultiplayerStatus(
-                `ONLINE // ${Object.keys(remotePlayersRef.current).length + 1} PLAYERS`
-              );
             }
+          }
+
+          if (message.type === "game_started") {
+            setGameStarted(true);
+            setMultiplayerStatus("MATCH LIVE");
           }
 
           if (message.type === "error") {
@@ -2410,12 +2402,13 @@ function Game() {
       const remotePlayers = Object.values(remotePlayersRef.current);
 
       remotePlayers.forEach((remotePlayer) => {
-        if (!Number.isFinite(remotePlayer.x) || !Number.isFinite(remotePlayer.y)) {
+        const x = Number(remotePlayer.x);
+        const y = Number(remotePlayer.y);
+
+        if (!Number.isFinite(x) || !Number.isFinite(y)) {
           return;
         }
 
-        const x = Number(remotePlayer.x);
-        const y = Number(remotePlayer.y);
         const width = 40;
         const height = 40;
         const hp = Math.max(
@@ -2424,24 +2417,38 @@ function Game() {
         );
 
         context.save();
-
-        // Remote player body.
         context.translate(x + width / 2, y + height / 2);
+
+        // Team glow / body
         context.shadowColor = "#00ffff";
         context.shadowBlur = 18;
         context.strokeStyle = "#00ffff";
         context.lineWidth = 2;
-        context.strokeRect(-width / 2, -height / 2, width, height);
-        context.fillStyle = "rgba(0,255,255,0.16)";
-        context.fillRect(-width / 2, -height / 2, width, height);
+        context.strokeRect(
+          -width / 2,
+          -height / 2,
+          width,
+          height
+        );
 
-        // Direction/identity marker.
+        context.fillStyle = "rgba(0,255,255,0.18)";
+        context.fillRect(
+          -width / 2,
+          -height / 2,
+          width,
+          height
+        );
+
+        // Player core
+        context.shadowColor = "#ffffff";
+        context.shadowBlur = 8;
         context.fillStyle = "#ffffff";
         context.beginPath();
         context.arc(0, 0, 5, 0, Math.PI * 2);
         context.fill();
 
-        // Callsign.
+        // Callsign
+        context.shadowBlur = 0;
         context.fillStyle = "#00ffff";
         context.font = "700 11px monospace";
         context.textAlign = "center";
@@ -2451,9 +2458,10 @@ function Game() {
           -28
         );
 
-        // Health bar.
-        context.fillStyle = "rgba(0,0,0,0.8)";
+        // Health bar
+        context.fillStyle = "rgba(0,0,0,0.85)";
         context.fillRect(-24, 25, 48, 5);
+
         context.fillStyle = "#00ffff";
         context.fillRect(-24, 25, 48 * (hp / 100), 5);
 
@@ -2522,8 +2530,6 @@ function Game() {
             lastNetworkSyncRef.current = now;
           }
         }
-
-        drawRemotePlayers(ctx);
 
         updateShooting();
 
@@ -2707,6 +2713,14 @@ function Game() {
         playerRef.current.draw(
           ctx
         );
+      }
+
+      // =================================================
+      // REMOTE TEAMMATES
+      // =================================================
+
+      if (gameMode === "multiplayer") {
+        drawRemotePlayers(ctx);
       }
 
       // =================================================
