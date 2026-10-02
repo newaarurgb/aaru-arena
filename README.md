@@ -2,9 +2,9 @@
 
 ## Solo career
 
-The offline career hub includes a six-world campaign, unlockable pilot classes, combat quests, and a local score-attack tournament. Campaign progress and tournament results are saved in the browser on the current device.
+The registered-pilot career hub includes an endless sector ladder across six world themes, unlockable pilot classes, combat quests, and a local score-attack tournament. Campaign progress and tournament results are saved in the browser on the current device. Guest pilots can play a standard run but cannot access career features or post tournament scores.
 
-Three additional enemy types join later waves: chargers, wardens, and splitters. Defeating a splitter releases two weaker runners.
+Each sector generates its own enemy roster and named variants, with larger waves and stronger enemies at higher sectors. Every enemy can fire, has a distinct shot pattern, and displays an energy or kinetic weakness. Boss variants rotate between runs; defeating a splitter releases two weaker runners.
 
 ## Frontend
 

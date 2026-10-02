@@ -43,10 +43,24 @@ const DIFFICULTIES = {
 };
 
 class BossEnemy {
-  constructor(x, y) {
-    this.x=x; this.y=y; this.width=90; this.height=90; this.type="boss";
-    this.maxHealth=1200; this.health=this.maxHealth; this.speed=1.15; this.damage=25;
-    this.hitFlash=0; this.hitTimer=0; this.shootTimer=75; this.pulse=0; this.spin=0;
+  constructor(x, y, sector = 1, variantIndex = 0) {
+    const variants = [
+      { name: "RIFT DEVOURER", color: "#ff4d6d", weakness: "KINETIC", pattern: "fan" },
+      { name: "ION SOVEREIGN", color: "#45d9ff", weakness: "ENERGY", pattern: "ring" },
+      { name: "THORN COLOSSUS", color: "#b9e769", weakness: "KINETIC", pattern: "spiral" },
+      { name: "ASHEN REGENT", color: "#ffad58", weakness: "ENERGY", pattern: "cross" },
+      { name: "NULL EMPEROR", color: "#d28aff", weakness: "KINETIC", pattern: "burst" },
+    ];
+    const variant = variants[variantIndex % variants.length];
+    this.x = x; this.y = y; this.width = 90; this.height = 90; this.type = "boss";
+    this.sector = sector;
+    this.name = `${variant.name} // ${sector}`;
+    this.color = variant.color;
+    this.weakness = variant.weakness;
+    this.pattern = variant.pattern;
+    this.maxHealth = 1200 + (sector - 1) * 240;
+    this.health = this.maxHealth; this.speed = 1.15 + Math.min(2, (sector - 1) * 0.06); this.damage = 25 + sector * 1.2;
+    this.hitFlash = 0; this.hitTimer = 0; this.shootTimer = 75; this.pulse = 0; this.spin = 0;
   }
   update(player, canvas) {
     const px=player.x+player.width/2, py=player.y+player.height/2;
@@ -61,28 +75,54 @@ class BossEnemy {
     this.shootTimer--; this.pulse+=0.06; this.spin+=0.035;
     if(this.hitFlash>0)this.hitFlash--; if(this.hitTimer>0)this.hitTimer--;
   }
-  canShoot(){ if(this.shootTimer<=0){this.shootTimer=85;return true;} return false; }
+  canShoot(){ if(this.shootTimer<=0){this.shootTimer=Math.max(34, 85 - this.sector);return true;} return false; }
   getShootDirection(player){
     const dx=player.x+player.width/2-(this.x+this.width/2);
     const dy=player.y+player.height/2-(this.y+this.height/2);
     const d=Math.sqrt(dx*dx+dy*dy)||1; return {x:dx/d,y:dy/d};
   }
-  takeDamage(amount){this.health-=amount;this.hitFlash=7;this.hitTimer=4;return this.health<=0;}
+  getAttackShots(player) {
+    const direction = this.getShootDirection(player);
+    const angle = Math.atan2(direction.y, direction.x);
+    const angles = this.pattern === "ring"
+      ? Array.from({ length: 12 }, (_, index) => index * Math.PI / 6)
+      : this.pattern === "cross"
+        ? [0, Math.PI / 2, Math.PI, Math.PI * 1.5]
+        : this.pattern === "spiral"
+          ? [angle - 0.45, angle - 0.15, angle + 0.15, angle + 0.45]
+          : this.pattern === "burst"
+            ? [angle - 0.3, angle, angle + 0.3, angle + Math.PI]
+            : [angle - 0.4, angle - 0.2, angle, angle + 0.2, angle + 0.4];
+    return angles.map((shotAngle) => ({
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2,
+      velocityX: Math.cos(shotAngle) * (5 + Math.min(3, this.sector * 0.1)),
+      velocityY: Math.sin(shotAngle) * (5 + Math.min(3, this.sector * 0.1)),
+      radius: 8,
+      damage: this.damage * 0.58,
+      life: 240,
+      bossShot: true,
+      color: this.color,
+    }));
+  }
+  takeDamage(amount, attackType = "energy") {this.health-=amount*(attackType===this.weakness.toLowerCase()?1.8:1);this.hitFlash=7;this.hitTimer=4;return this.health<=0;}
   draw(ctx){
     const cx=this.x+45,cy=this.y+45,p=Math.sin(this.pulse)*5;
-    ctx.save(); ctx.shadowColor=this.hitFlash>0?"#fff":"#ff0055";ctx.shadowBlur=30;ctx.strokeStyle=this.hitFlash>0?"#fff":"#ff0055";ctx.lineWidth=3;
+    ctx.save(); ctx.shadowColor=this.hitFlash>0?"#fff":this.color;ctx.shadowBlur=30;ctx.strokeStyle=this.hitFlash>0?"#fff":this.color;ctx.lineWidth=3;
     ctx.beginPath();ctx.arc(cx,cy,52+p,0,Math.PI*2);ctx.stroke();
-    ctx.translate(cx,cy);ctx.rotate(this.spin);ctx.fillStyle=this.hitFlash>0?"#fff":"#aa0044";
+    ctx.translate(cx,cy);ctx.rotate(this.spin);ctx.fillStyle=this.hitFlash>0?"#fff":this.color;
     for(let i=0;i<4;i++){ctx.rotate(Math.PI/2);ctx.beginPath();ctx.moveTo(0,-56);ctx.lineTo(9,-40);ctx.lineTo(-9,-40);ctx.closePath();ctx.fill();}
-    ctx.fillStyle=this.hitFlash>0?"#fff":"#ff0055";ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=this.hitFlash>0?"#fff":this.color;ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.fill();
     ctx.fillStyle="#080808";ctx.beginPath();ctx.arc(0,0,24,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#fff";ctx.fillRect(-15,-9,9,7);ctx.fillRect(6,-9,9,7);ctx.fillStyle="#ff0055";ctx.fillRect(-12,-7,5,3);ctx.fillRect(9,-7,5,3);ctx.restore();
-    const hp=Math.max(0,this.health/this.maxHealth);ctx.save();ctx.fillStyle="#080808";ctx.fillRect(this.x-10,this.y-22,this.width+20,8);ctx.fillStyle="#ff0055";ctx.shadowColor="#ff0055";ctx.shadowBlur=10;ctx.fillRect(this.x-10,this.y-22,(this.width+20)*hp,8);ctx.restore();
+    ctx.fillStyle="#fff";ctx.fillRect(-15,-9,9,7);ctx.fillRect(6,-9,9,7);ctx.fillStyle=this.color;ctx.fillRect(-12,-7,5,3);ctx.fillRect(9,-7,5,3);ctx.restore();
+    const hp=Math.max(0,this.health/this.maxHealth);ctx.save();ctx.fillStyle="#080808";ctx.fillRect(this.x-10,this.y-22,this.width+20,8);ctx.fillStyle=this.color;ctx.shadowColor=this.color;ctx.shadowBlur=10;ctx.fillRect(this.x-10,this.y-22,(this.width+20)*hp,8);ctx.fillStyle="#fff";ctx.font="700 8px monospace";ctx.textAlign="center";ctx.fillText(`${this.name} // WEAK: ${this.weakness}`,cx,this.y-29);ctx.restore();
   }
 }
 
 function Game() {
   const navigate = useNavigate();
+  const profile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+  const isGuest = !profile.email || Boolean(profile.guest);
   const canvasRef = useRef(null);
 
   // =====================================================
@@ -249,6 +289,8 @@ function Game() {
   const [difficulty, setDifficulty] = useState("hard");
   const [environment, setEnvironment] = useState(
     () => {
+      const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+      if (!savedProfile.email || savedProfile.guest) return "neon";
       const savedWorld = sessionStorage.getItem("aaruEnvironment") || "neon";
       return readCareerProgress().unlockedWorlds.includes(savedWorld)
         ? savedWorld
@@ -259,16 +301,29 @@ function Game() {
     () => sessionStorage.getItem("aaruPlayerDesign") || "aqua"
   );
   const [fighterId] = useState(
-    () => sessionStorage.getItem("aaruFighter") || readCareerProgress().selectedFighter || "vanguard"
+    () => {
+      const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+      return !savedProfile.email || savedProfile.guest
+        ? "vanguard"
+        : sessionStorage.getItem("aaruFighter") || readCareerProgress().selectedFighter || "vanguard";
+    }
   );
   const [runMode] = useState(
-    () => sessionStorage.getItem("aaruRunMode") || "campaign"
+    () => {
+      const savedMode = sessionStorage.getItem("aaruRunMode") || "campaign";
+      const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+      return !savedProfile.email || savedProfile.guest ? "campaign" : savedMode;
+    }
   );
+  const [campaignLevel] = useState(() => {
+    const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+    return !savedProfile.email || savedProfile.guest
+      ? 1
+      : Math.max(1, Number(sessionStorage.getItem("aaruCampaignLevel")) || 1);
+  });
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
   const [multiplayerError, setMultiplayerError] = useState("");
-
-  const profile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
 
   const difficultySettings = DIFFICULTIES[difficulty] || DIFFICULTIES.hard;
 
@@ -928,7 +983,8 @@ function Game() {
         Math.max(0, Math.min(width - 30, enemy.x + direction * 24)),
         Math.max(0, Math.min(height - 30, enemy.y + direction * 14)),
         enemy.wave,
-        "runner"
+        "runner",
+        enemy.sector
       );
       child.health = Math.ceil(child.maxHealth * 0.65);
       child.maxHealth = child.health;
@@ -1026,7 +1082,7 @@ function Game() {
   // =====================================================
 
   function handleEnemyDefeated() {
-    recordEnemyDefeat();
+    if (!isGuest) recordEnemyDefeat();
 
     if (difficultySettings.defeatHeal > 0 && playerRef.current) {
       playerRef.current.health = Math.min(
@@ -1076,7 +1132,7 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
-    recordWaveClear();
+    if (!isGuest) recordWaveClear();
     triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
@@ -1377,10 +1433,7 @@ function Game() {
           enemy.width / 2 +
             projectile.radius
         ) {
-          const dead =
-            enemy.takeDamage(
-              projectile.damage
-            );
+          const dead = enemy.takeDamage(projectile.damage, "energy");
 
           createHitEffect(
             enemyCenterX,
@@ -1791,36 +1844,8 @@ function Game() {
       // SHOOTER ATTACK
       // =====================================================
 
-      if (
-        (enemy.type === "shooter" || enemy.type === "warden") &&
-        enemy.canShoot()
-      ) {
-        const direction =
-          enemy.getShootDirection(currentPlayer);
-
-        enemyProjectilesRef.current.push({
-          x: enemy.x + enemy.width / 2,
-          y: enemy.y + enemy.height / 2,
-          velocityX: direction.x * 4.5,
-          velocityY: direction.y * 4.5,
-          radius: 6,
-          damage: enemy.damage || 12,
-          life: 180,
-        });
-      }
-
-      if (enemy.type === "boss" && enemy.canShoot()) {
-        const direction = enemy.getShootDirection(currentPlayer);
-        enemyProjectilesRef.current.push({
-          x: enemy.x + enemy.width / 2,
-          y: enemy.y + enemy.height / 2,
-          velocityX: direction.x * 5.2,
-          velocityY: direction.y * 5.2,
-          radius: 8,
-          damage: 15 * difficultySettings.damageMultiplier,
-          life: 220,
-          bossShot: true,
-        });
+      if (enemy.canShoot()) {
+        enemyProjectilesRef.current.push(...enemy.getAttackShots(currentPlayer));
       }
 
       // =====================================================
@@ -1944,7 +1969,7 @@ function Game() {
 
       if (distance > attackRange) return true;
 
-      const dead = enemy.takeDamage(damage);
+      const dead = enemy.takeDamage(damage, "kinetic");
 
       createHitEffect(
         enemyCenterX,
@@ -2099,11 +2124,12 @@ function Game() {
 
       if (wave >= 5) {
         spawnedEnemies = Spawner.createWave(
-          4,
+          wave,
           canvas.width,
           canvas.height,
           playerRef.current,
-          difficulty
+          difficulty,
+          campaignLevel
         );
 
         const bossSpawn = Spawner.getSafeSpawnPoint(
@@ -2119,7 +2145,9 @@ function Game() {
         spawnedEnemies.push(
           new BossEnemy(
             bossSpawn.x,
-            bossSpawn.y
+            bossSpawn.y,
+            campaignLevel,
+            Math.floor(Math.random() * 5)
           )
         );
       } else {
@@ -2128,7 +2156,8 @@ function Game() {
           canvas.width,
           canvas.height,
           playerRef.current,
-          difficulty
+          difficulty,
+          campaignLevel
         );
       }
 
@@ -3089,10 +3118,10 @@ function Game() {
       enemyProjectilesRef.current.forEach((bullet) => {
         ctx.save();
 
-        ctx.shadowColor = "#00aaff";
+        ctx.shadowColor = bullet.color || "#00aaff";
         ctx.shadowBlur = 18;
 
-        ctx.fillStyle = "#00aaff";
+        ctx.fillStyle = bullet.color || "#00aaff";
 
         ctx.beginPath();
 
@@ -3206,7 +3235,7 @@ function Game() {
         playerRef.current.health = playerRef.current.maxHealth || 100;
         setHealth(playerRef.current.health);
         setWaveCleared(true);
-        recordWaveClear();
+        if (!isGuest) recordWaveClear();
 
         triggerScreenShake(7);
 
@@ -3348,15 +3377,16 @@ function Game() {
   }, [waveCleared]);
 
   useEffect(() => {
-    if ((!gameOver && !victory) || runRecordedRef.current) return;
+    if (isGuest || (!gameOver && !victory) || runRecordedRef.current) return;
     runRecordedRef.current = true;
     recordRunResult({
       worldId: environment,
       score: progressionRef.current.score,
       won: victory,
       tournament: runMode === "tournament",
+      campaignLevel,
     });
-  }, [gameOver, victory, environment, runMode]);
+  }, [gameOver, victory, environment, runMode, campaignLevel, isGuest]);
 
   // =====================================================
   // NEXT WAVE
@@ -3691,9 +3721,20 @@ function Game() {
               </button>
             </div>
 
+            {!isGuest && (
+              <Link className="leaderboard-action" to="/career">
+                PILOT CAREER // QUESTS // ARENA CUP
+              </Link>
+            )}
+
             <Link className="leaderboard-action" to="/">
               BACK TO MAIN MENU
             </Link>
+            {isGuest && (
+              <Link className="leaderboard-action" to="/intro">
+                SIGN IN FOR CAREER // QUESTS // ARENA CUP
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -4179,7 +4220,7 @@ function Game() {
             <p>FINAL BOSS DEFEATED</p>
             <p>Score: {score}</p>
             <p>Level: {level}</p>
-            <p>YOU CLEARED AARU ARENA</p>
+            <p>SECTOR {campaignLevel} CLEARED</p>
 
             {!scoreSaved ? (
               <>
@@ -4210,6 +4251,11 @@ function Game() {
               <Link className="restart-button leaderboard-link-button" to="/leaderboard">
                 VIEW LEADERBOARD
               </Link>
+              {!isGuest && (
+                <Link className="restart-button leaderboard-link-button" to="/career">
+                  NEXT SECTOR / CAREER
+                </Link>
+              )}
               <button className="restart-button" onClick={restartGame}>PLAY AGAIN</button>
             </div>
           </div>
@@ -4266,6 +4312,11 @@ function Game() {
               <Link className="restart-button leaderboard-link-button" to="/leaderboard">
                 VIEW LEADERBOARD
               </Link>
+              {!isGuest && (
+                <Link className="restart-button leaderboard-link-button" to="/career">
+                  CAREER / QUESTS / CUP
+                </Link>
+              )}
               <button
                 className="restart-button"
                 onClick={restartGame}

@@ -1,10 +1,16 @@
 class Enemy {
-  constructor(x, y, wave = 1, type = "grunt") {
+  constructor(x, y, wave = 1, type = "grunt", sector = 1) {
     this.x = x;
     this.y = y;
 
     this.type = type;
     this.wave = wave;
+    this.sector = Math.max(1, Number(sector) || 1);
+    this.variantName = `${["ASH", "STORM", "FROST", "VOID", "EMBER", "MOSS", "TIDAL", "CHROME"][((this.sector - 1) % 8)]} ${type.toUpperCase()}-${this.sector}`;
+    this.tint = `hsl(${(this.sector * 53 + type.length * 19) % 360} 88% 60%)`;
+    this.weakness = ["runner", "charger", "splitter"].includes(type) ? "KINETIC" : "ENERGY";
+    this.shootInterval = Math.max(34, 112 - Math.min(65, this.sector * 1.4));
+    this.shootCooldown = Math.random() * this.shootInterval;
 
     this.hitFlash = 0;
     this.hitTimer = 0;
@@ -78,6 +84,10 @@ class Enemy {
         break;
     }
 
+    const sectorScale = 1 + (this.sector - 1) * 0.11;
+    this.maxHealth *= sectorScale;
+    this.speed *= 1 + Math.min(0.8, (this.sector - 1) * 0.018);
+    this.damage *= 1 + Math.min(2.5, (this.sector - 1) * 0.075);
     this.health = this.maxHealth;
   }
 
@@ -161,17 +171,48 @@ class Enemy {
   }
 
   canShoot() {
-    if (this.type !== "shooter" && this.type !== "warden") {
-      return false;
-    }
-
     if (this.shootCooldown > 0) {
       return false;
     }
 
-    this.shootCooldown = this.shootInterval;
+    const typeRate = {
+      grunt: 1,
+      runner: 0.78,
+      tank: 1.5,
+      shooter: 1.1,
+      charger: 1.2,
+      warden: 1.3,
+      splitter: 1.15,
+    }[this.type] || 1;
+    this.shootCooldown = this.shootInterval * typeRate;
 
     return true;
+  }
+
+  getAttackShots(player) {
+    const direction = this.getShootDirection(player);
+    const angle = Math.atan2(direction.y, direction.x);
+    const speed = this.type === "runner" ? 7.2 : this.type === "charger" ? 6.8 : 4.2;
+    let angles = [angle];
+
+    if (this.type === "tank") {
+      angles = Array.from({ length: 8 }, (_, index) => index * Math.PI / 4);
+    } else if (this.type === "warden") {
+      angles = [-2, -1, 0, 1, 2].map((offset) => angle + offset * 0.2);
+    } else if (this.type === "runner" || this.type === "splitter") {
+      angles = [angle - 0.16, angle, angle + 0.16];
+    }
+
+    return angles.map((shotAngle) => ({
+      x: this.x + this.width / 2,
+      y: this.y + this.height / 2,
+      velocityX: Math.cos(shotAngle) * speed,
+      velocityY: Math.sin(shotAngle) * speed,
+      radius: this.type === "tank" ? 7 : 5,
+      damage: this.damage * 0.55,
+      life: 190,
+      color: this.tint,
+    }));
   }
 
   getShootDirection(player) {
@@ -199,8 +240,11 @@ class Enemy {
     };
   }
 
-  takeDamage(amount) {
-    this.health -= amount;
+  takeDamage(amount, attackType = "energy") {
+    const adjustedDamage = attackType === this.weakness.toLowerCase()
+      ? amount * 1.75
+      : amount;
+    this.health -= adjustedDamage;
 
     this.hitFlash = 8;
     this.hitTimer = 5;
@@ -252,6 +296,8 @@ class Enemy {
         symbol = "◆";
         break;
     }
+
+    color = this.tint;
 
     if (this.hitFlash > 0) {
       color = "#ffffff";
@@ -412,6 +458,10 @@ class Enemy {
     ctx.textBaseline = "middle";
 
     ctx.fillText(symbol, centerX, centerY);
+
+    ctx.font = "700 7px monospace";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(`WEAK: ${this.weakness}`, centerX, this.y - 15);
 
     ctx.restore();
 

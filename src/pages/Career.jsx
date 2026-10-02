@@ -9,12 +9,11 @@ function Career() {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(readCareerProgress);
   const [activeTab, setActiveTab] = useState("CAMPAIGN");
-  const [selectedWorld, setSelectedWorld] = useState(
+  const profile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+  const [selectedLevel, setSelectedLevel] = useState(
     () => {
-      const savedWorld = sessionStorage.getItem("aaruEnvironment") || CAREER_WORLDS[0].id;
-      return readCareerProgress().unlockedWorlds.includes(savedWorld)
-        ? savedWorld
-        : CAREER_WORLDS[0].id;
+      const savedLevel = Number(sessionStorage.getItem("aaruCampaignLevel")) || 1;
+      return Math.min(savedLevel, readCareerProgress().unlockedLevel || 1);
     }
   );
 
@@ -22,7 +21,13 @@ function Career() {
   const selectedFighter = progress.selectedFighter || "vanguard";
 
   const deploy = (mode) => {
-    sessionStorage.setItem("aaruEnvironment", selectedWorld);
+    if (profile.guest) {
+      navigate("/intro");
+      return;
+    }
+    const world = CAREER_WORLDS[(selectedLevel - 1) % CAREER_WORLDS.length];
+    sessionStorage.setItem("aaruEnvironment", world.id);
+    sessionStorage.setItem("aaruCampaignLevel", String(selectedLevel));
     sessionStorage.setItem("aaruRunMode", mode);
     navigate("/game");
   };
@@ -32,8 +37,9 @@ function Career() {
     setProgress(readCareerProgress());
   };
 
-  const unlockedWorlds = progress.unlockedWorlds || [CAREER_WORLDS[0].id];
-  const completedWorlds = progress.completedWorlds || [];
+  const unlockedLevel = progress.unlockedLevel || 1;
+  const levelWindowStart = Math.max(1, unlockedLevel - 5);
+  const displayedLevels = Array.from({ length: 11 }, (_, index) => levelWindowStart + index);
   const scores = progress.tournamentScores || [];
   const questValues = {
     kills: progress.kills,
@@ -42,6 +48,20 @@ function Career() {
     bestScore: progress.bestScore,
     tournamentBest: Math.max(0, ...scores.map((entry) => Number(entry.score) || 0)),
   };
+
+  if (profile.guest || !profile.email) {
+    return (
+      <main className="career-page career-locked-page">
+        <Link to="/game" className="career-back">← ARENA</Link>
+        <section className="career-locked-message">
+          <p className="career-kicker">PILOT RECORD // ACCESS LOCKED</p>
+          <h1>SIGN IN REQUIRED</h1>
+          <p>Campaign records, quests, pilot unlocks, and Arena Cup standings are for registered pilots. Guest pilots can still play a standard run.</p>
+          <Link className="career-primary" to="/intro">SIGN IN OR CREATE PROFILE <span>→</span></Link>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="career-page">
@@ -72,36 +92,38 @@ function Career() {
       {activeTab === "CAMPAIGN" && (
         <section className="career-section">
           <div className="career-section-heading">
-            <div><p>THE SIX-WORLD CIRCUIT</p><h2>CAMPAIGN LEVELS</h2></div>
-            <span>{unlockedWorlds.length}/{CAREER_WORLDS.length} UNLOCKED</span>
+            <div><p>PROCEDURAL SECTOR LADDER</p><h2>CAMPAIGN LEVELS</h2></div>
+            <span>SECTOR {unlockedLevel} // INFINITE FRONTIER</span>
           </div>
           <div className="career-world-grid">
-            {CAREER_WORLDS.map((world) => {
-              const unlocked = unlockedWorlds.includes(world.id);
-              const completed = completedWorlds.includes(world.id);
+            {displayedLevels.map((campaignLevel) => {
+              const world = CAREER_WORLDS[(campaignLevel - 1) % CAREER_WORLDS.length];
+              const unlocked = campaignLevel <= unlockedLevel;
+              const completed = campaignLevel < unlockedLevel;
               return (
                 <button
-                  key={world.id}
+                  key={campaignLevel}
                   type="button"
                   disabled={!unlocked}
-                  className={`career-world ${selectedWorld === world.id ? "selected" : ""} ${!unlocked ? "locked" : ""}`}
+                  className={`career-world ${selectedLevel === campaignLevel ? "selected" : ""} ${!unlocked ? "locked" : ""}`}
                   style={{ "--world-color": world.accent }}
                   onClick={() => {
-                    setSelectedWorld(world.id);
+                    setSelectedLevel(campaignLevel);
                     sessionStorage.setItem("aaruEnvironment", world.id);
+                    sessionStorage.setItem("aaruCampaignLevel", String(campaignLevel));
                   }}
                 >
-                  <span className="world-index">LEVEL {String(world.level).padStart(2, "0")}</span>
+                  <span className="world-index">LEVEL {String(campaignLevel).padStart(2, "0")}</span>
                   <span className="world-orb" aria-hidden="true" />
                   <strong>{world.name}</strong>
-                  <small>{world.description}</small>
-                  <em>{completed ? "BOSS DEFEATED" : unlocked ? "5 WAVES // 1 BOSS" : "LOCKED"}</em>
+                  <small>{world.description} // VARIANT {campaignLevel}</small>
+                  <em>{completed ? "SECTOR CLEARED" : unlocked ? "5 WAVES // NEW ROSTER" : "LOCKED"}</em>
                 </button>
               );
             })}
           </div>
           <div className="career-deploy-row">
-            <p>Selected pilot: <strong>{FIGHTERS[selectedFighter]?.name || "VANGUARD"}</strong></p>
+            <p>Sector {selectedLevel} // <strong>{FIGHTERS[selectedFighter]?.name || "VANGUARD"}</strong></p>
             <button className="career-primary" type="button" onClick={() => deploy("campaign")}>DEPLOY CAMPAIGN <span>→</span></button>
           </div>
         </section>
@@ -167,12 +189,15 @@ function Career() {
             <div className="tournament-event">
               <div className="tournament-mark">AA<span> CUP</span></div>
               <p>One pilot. Five waves. One boss. Post your best score from any unlocked world.</p>
-              <label htmlFor="tournament-world">ARENA</label>
-              <select id="tournament-world" value={selectedWorld} onChange={(event) => setSelectedWorld(event.target.value)}>
-                {CAREER_WORLDS.filter((world) => unlockedWorlds.includes(world.id)).map((world) => (
-                  <option key={world.id} value={world.id}>{world.name}</option>
-                ))}
-              </select>
+              <label htmlFor="tournament-world">UNLOCKED SECTOR (1-{unlockedLevel})</label>
+              <input
+                id="tournament-world"
+                type="number"
+                min="1"
+                max={unlockedLevel}
+                value={selectedLevel}
+                onChange={(event) => setSelectedLevel(Math.max(1, Math.min(unlockedLevel, Number(event.target.value) || 1)))}
+              />
               <button className="career-primary" type="button" onClick={() => deploy("tournament")}>ENTER SCORE ATTACK <span>→</span></button>
             </div>
             <div className="tournament-table-wrap">

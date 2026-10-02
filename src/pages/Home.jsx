@@ -42,14 +42,6 @@ function Home() {
 
           <button
             className="rules-home-button"
-            onClick={() => navigate("/career")}
-          >
-            <span>✦</span>
-            PILOT CAREER
-          </button>
-
-          <button
-            className="rules-home-button"
             onClick={() => navigate("/rules")}
           >
             <span>?</span>

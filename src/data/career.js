@@ -96,6 +96,7 @@ export function readCareerProgress() {
       bosses: 0,
       bestScore: 0,
       runs: 0,
+      unlockedLevel: 1,
       unlockedWorlds: [CAREER_WORLDS[0].id],
       completedWorlds: [],
       selectedFighter: "vanguard",
@@ -109,6 +110,7 @@ export function readCareerProgress() {
       bosses: 0,
       bestScore: 0,
       runs: 0,
+      unlockedLevel: 1,
       unlockedWorlds: [CAREER_WORLDS[0].id],
       completedWorlds: [],
       selectedFighter: "vanguard",
@@ -139,7 +141,7 @@ export function recordWaveClear() {
   updateCareerProgress((progress) => ({ ...progress, waves: progress.waves + 1 }));
 }
 
-export function recordRunResult({ worldId, score, won, tournament }) {
+export function recordRunResult({ worldId, score, won, tournament, campaignLevel = 1 }) {
   return updateCareerProgress((progress) => {
     const next = {
       ...progress,
@@ -147,7 +149,8 @@ export function recordRunResult({ worldId, score, won, tournament }) {
       bestScore: Math.max(progress.bestScore, score),
     };
 
-    if (won) {
+    if (won && !tournament) {
+      next.unlockedLevel = Math.max(next.unlockedLevel || 1, campaignLevel + 1);
       const worldIndex = CAREER_WORLDS.findIndex((world) => world.id === worldId);
       next.bosses += 1;
       next.completedWorlds = [...new Set([...next.completedWorlds, worldId])];

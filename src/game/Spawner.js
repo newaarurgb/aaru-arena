@@ -63,84 +63,41 @@ class Spawner {
     )[0];
   }
 
-  static createWave(wave, canvasWidth, canvasHeight, player = null, difficulty = "hard") {
+  static createWave(wave, canvasWidth, canvasHeight, player = null, difficulty = "hard", campaignLevel = 1) {
     const safeWave = Math.max(1, Math.floor(Number(wave) || 1));
+    const sector = Math.max(1, Math.floor(Number(campaignLevel) || 1));
     const width = Math.max(1, canvasWidth || 1);
     const height = Math.max(1, canvasHeight || 1);
-
     const enemies = [];
-
-    // Wave 1 = 5 enemies, then +2 every wave.
-    // Wave 2 = 7, Wave 3 = 9, Wave 4 = 11, etc.
-    const safeRadius = 220 + safeWave * 25;
+    const roster = ["grunt", "runner", "tank", "shooter", "charger", "warden", "splitter"];
+    const seed = (sector - 1) * 2654435761;
+    const levelRoster = Array.from({ length: 3 }, (_, index) =>
+      roster[(Math.floor(seed % roster.length) + index * 3 + index) % roster.length]
+    );
+    const safeRadius = 220 + Math.min(500, safeWave * 25 + sector * 8);
     const spawnMultiplier = difficulty === "difficult" ? 1.5 : difficulty === "hard" ? 1.25 : 1;
-    let spawnIndex = 0;
+    const count = Math.min(
+      600,
+      Math.ceil((5 + (safeWave - 1) * 2 + sector - 1) * spawnMultiplier)
+    );
 
-    // Wave 1 = 5, Wave 2 = 5 + 7, Wave 3 = 5 + 7 + 9, etc.
-    for (let batchWave = 1; batchWave <= safeWave; batchWave++) {
-      const batchCount = Math.ceil((5 + (batchWave - 1) * 2) * spawnMultiplier);
-
-      for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+    for (let index = 0; index < count; index++) {
+      const type = levelRoster[(index + Math.floor(index / 3)) % levelRoster.length];
+      const definition = new Enemy(0, 0, safeWave, type, sector);
       const spawn = Spawner.getSafeSpawnPoint(
         width,
         height,
         player,
-        spawnIndex,
-        40,
-        40,
+        index,
+        definition.width,
+        definition.height,
         safeRadius
       );
-
-      let type = "grunt";
-      const random = Math.random();
-
-      if (batchWave === 1) {
-        type = "grunt";
-      } else if (batchWave === 2) {
-        type = random < 0.35 ? "runner" : "grunt";
-      } else if (batchWave === 3) {
-        if (random < 0.16) {
-          type = "splitter";
-        } else if (random < 0.34) {
-          type = "tank";
-        } else if (random < 0.58) {
-          type = "runner";
-        } else {
-          type = "grunt";
-        }
-      } else {
-        if (random < 0.14) {
-          type = "warden";
-        } else if (random < 0.28) {
-          type = "charger";
-        } else if (random < 0.42) {
-          type = "splitter";
-        } else if (random < 0.60) {
-          type = "shooter";
-        } else if (random < 0.76) {
-          type = "tank";
-        } else if (random < 0.9) {
-          type = "runner";
-        } else {
-          type = "grunt";
-        }
-      }
-
-      enemies.push(
-        new Enemy(
-          spawn.x,
-          spawn.y,
-          batchWave,
-          type
-        )
-      );
-
-      spawnIndex++;
-      }
+      definition.x = spawn.x;
+      definition.y = spawn.y;
+      enemies.push(definition);
     }
 
-    // Always return the actual array. Game.jsx uses this to
-    // determine whether a wave really started.
     return enemies;
   }
 }
