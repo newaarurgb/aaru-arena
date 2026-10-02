@@ -284,9 +284,8 @@ function Game() {
       return `${protocol}://${window.location.hostname}:3001`;
     }
 
-    // Vercel production WebSocket Function.
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    return `${protocol}://${window.location.host}/api/ws`;
+    // Production multiplayer needs a persistent shared WebSocket service.
+    return "";
   };
 
   const disconnectMultiplayer = () => {

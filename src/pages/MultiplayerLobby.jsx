@@ -46,11 +46,8 @@ function MultiplayerLobby() {
       return "ws://localhost:3001";
     }
 
-    // Production / Vercel
-    const protocol =
-      window.location.protocol === "https:" ? "wss:" : "ws:";
-
-    return `${protocol}//${window.location.host}/api/ws`;
+    // Production multiplayer needs a persistent shared WebSocket service.
+    return "";
   };
 
   /*
@@ -87,6 +84,12 @@ function MultiplayerLobby() {
     setStatus("CONNECTING...");
 
     const url = getSocketUrl();
+
+    if (!url) {
+      setStatus("SERVER URL REQUIRED");
+      setError("SET VITE_WS_URL TO YOUR DEPLOYED MULTIPLAYER SERVER.");
+      return;
+    }
 
     console.log("Connecting to multiplayer:", url);
 

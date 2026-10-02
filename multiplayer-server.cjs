@@ -57,6 +57,7 @@ function broadcast(room, message, exceptWs = null) {
 
 function getRoomState(room) {
   return {
+    room: room.code,
     roomCode: room.code,
     hostId: room.hostId,
     started: room.started,
@@ -64,6 +65,7 @@ function getRoomState(room) {
     players: Array.from(room.players.values()).map((player) => ({
       id: player.id,
       name: player.name,
+      avatar: player.avatar,
       callSign: player.callSign,
       x: player.x,
       y: player.y,
@@ -133,6 +135,8 @@ function removePlayerFromRoom(player) {
         type: "host_changed",
         hostId: newHost.id,
       });
+    } else if (room.started) {
+      room.hostId = null;
     } else {
       rooms.delete(room.code);
 
@@ -144,6 +148,17 @@ function removePlayerFromRoom(player) {
   }
 
   player.roomCode = null;
+
+  if (room.started && room.players.size === 0) {
+    room.emptySince = Date.now();
+    room.cleanupTimer = setTimeout(() => {
+      if (room.players.size === 0) {
+        rooms.delete(room.code);
+        console.log(`[ROOM] Expired disconnected match ${room.code}`);
+      }
+    }, 120000);
+    room.cleanupTimer.unref();
+  }
 
   broadcastRoomState(room);
 }
@@ -227,6 +242,8 @@ wss.on("connection", (ws, request) => {
         // ----------------------------------------------------
 
         sharedWorld: null,
+        cleanupTimer: null,
+        emptySince: null,
 
         createdAt: Date.now(),
       };
@@ -243,6 +260,8 @@ wss.on("connection", (ws, request) => {
           ? message.callSign.trim().slice(0, 24)
           : "PLAYER 1";
 
+      player.avatar = Number(message.avatar) || 1;
+
       room.players.set(player.id, player);
 
       rooms.set(roomCode, room);
@@ -253,6 +272,7 @@ wss.on("connection", (ws, request) => {
 
       send(ws, {
         type: "room_created",
+        room: roomCode,
         roomCode,
         playerId: player.id,
         hostId: room.hostId,
@@ -271,7 +291,7 @@ wss.on("connection", (ws, request) => {
     // ========================================================
 
     if (message.type === "join_room") {
-      const roomCode = String(message.roomCode || "")
+      const roomCode = String(message.room || message.roomCode || "")
         .trim()
         .toUpperCase();
 
@@ -304,15 +324,6 @@ wss.on("connection", (ws, request) => {
         return;
       }
 
-      if (room.started) {
-        send(ws, {
-          type: "error",
-          message: "Match has already started.",
-        });
-
-        return;
-      }
-
       // Leave old room.
       if (player.roomCode) {
         removePlayerFromRoom(player);
@@ -320,10 +331,22 @@ wss.on("connection", (ws, request) => {
 
       player.roomCode = roomCode;
 
+      if (room.cleanupTimer) {
+        clearTimeout(room.cleanupTimer);
+        room.cleanupTimer = null;
+      }
+      room.emptySince = null;
+
+      if (room.started && !room.hostId) {
+        room.hostId = player.id;
+      }
+
       player.name =
         typeof message.name === "string" && message.name.trim()
           ? message.name.trim().slice(0, 24)
           : `Player ${room.players.size + 1}`;
+
+      player.avatar = Number(message.avatar) || 1;
 
       player.callSign =
         typeof message.callSign === "string" && message.callSign.trim()
@@ -347,6 +370,7 @@ wss.on("connection", (ws, request) => {
 
       send(ws, {
         type: "room_joined",
+        room: roomCode,
         roomCode,
         playerId: player.id,
         hostId: room.hostId,
@@ -418,6 +442,7 @@ wss.on("connection", (ws, request) => {
 
       broadcast(room, {
         type: "game_started",
+        room: room.code,
         roomCode: room.code,
         hostId: room.hostId,
         players: Array.from(room.players.values()).map((p) => ({
@@ -554,7 +579,7 @@ wss.on("connection", (ws, request) => {
           type: "co_op_state",
           state: room.sharedWorld,
         },
-        host.ws
+        player.ws
       );
 
       return;
@@ -799,7 +824,10 @@ setInterval(() => {
 
   for (const [roomCode, room] of rooms.entries()) {
     // Remove completely empty rooms.
-    if (room.players.size === 0) {
+    if (
+      room.players.size === 0 &&
+      (!room.started || now - (room.emptySince || now) >= 120000)
+    ) {
       rooms.delete(roomCode);
       continue;
     }

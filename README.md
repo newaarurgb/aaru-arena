@@ -10,15 +10,16 @@ npm run multiplayer
 
 The server generates six-character room codes, supports up to 10 players per room, and passes host start signals and player positions to the game.
 
-For a deployed frontend, set `VITE_WS_URL` to the public `wss://` URL of the deployed WebSocket server. Vercel serves the frontend, but it does not run this long-lived WebSocket process.
+For a deployed frontend, set `VITE_WS_URL` to the public `wss://` URL of the deployed WebSocket server. Vercel serves the frontend, but it does not run this long-lived WebSocket process; the app requires one shared server for every player.
 
 The included `render.yaml` can deploy the WebSocket server to Render. After deployment:
 
-1. Copy the Render service URL and change it to `wss://`.
-2. Add it as the Vercel environment variable `VITE_WS_URL`.
-3. Redeploy the Vercel frontend.
+1. Deploy the included `render.yaml` as a Render Blueprint. It starts `multiplayer-server.cjs`.
+2. Copy the Render service URL and change `https://` to `wss://`.
+3. Add it as the Vercel environment variable `VITE_WS_URL` for Production (and Preview if needed).
+4. Redeploy the Vercel frontend so the URL is included in the client build.
 
-Without this variable, multiplayer intentionally shows `SERVER URL REQUIRED` on the deployed site. Local development automatically uses `ws://localhost:3001`.
+Without this variable, multiplayer shows `SERVER URL REQUIRED` on the deployed site rather than connecting to a non-shared Vercel function. Local development automatically uses `ws://localhost:3001`.
 
 ## Frontend
 
