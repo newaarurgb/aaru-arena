@@ -1,15 +1,19 @@
+import { FIGHTERS } from "../data/career";
+
 class Player {
-  constructor(x, y, design = "aqua", displayName = "PILOT", avatar = 1) {
+  constructor(x, y, design = "aqua", displayName = "PILOT", avatar = 1, fighterId = "vanguard") {
     this.x = x;
     this.y = y;
 
     this.width = 40;
     this.height = 40;
 
-    this.speed = 5;
+    const fighter = FIGHTERS[fighterId] || FIGHTERS.vanguard;
+    this.fighterId = fighterId;
+    this.speed = fighter.speed;
 
-    this.health = 100;
-    this.maxHealth = 100;
+    this.health = fighter.health;
+    this.maxHealth = fighter.health;
 
     this.damageCooldown = false;
 
@@ -21,7 +25,7 @@ class Player {
 
     // Attack settings
     this.attackRange = 75;
-    this.attackDamage = 25;
+    this.attackDamage = fighter.damage;
   }
 
   move(keys, canvas) {

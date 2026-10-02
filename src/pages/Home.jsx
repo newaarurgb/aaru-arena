@@ -42,6 +42,14 @@ function Home() {
 
           <button
             className="rules-home-button"
+            onClick={() => navigate("/career")}
+          >
+            <span>✦</span>
+            PILOT CAREER
+          </button>
+
+          <button
+            className="rules-home-button"
             onClick={() => navigate("/rules")}
           >
             <span>?</span>
@@ -51,7 +59,7 @@ function Home() {
 
         <div className="home-status">
           <span className="status-dot" />
-          ARENA ONLINE
+          SOLO CAMPAIGN // LOCAL PROGRESS
         </div>
       </section>
     </main>

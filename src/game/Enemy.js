@@ -40,6 +40,34 @@ class Enemy {
         this.shootCooldown = Math.random() * 60;
         break;
 
+      case "charger":
+        this.width = 34;
+        this.height = 34;
+        this.maxHealth = 60 + (wave - 1) * 12;
+        this.speed = 1.15 + (wave - 1) * 0.1;
+        this.damage = 16;
+        this.chargeClock = 35 + Math.random() * 70;
+        this.chargeTimer = 0;
+        break;
+
+      case "warden":
+        this.width = 46;
+        this.height = 46;
+        this.maxHealth = 100 + (wave - 1) * 16;
+        this.speed = 0.75 + (wave - 1) * 0.06;
+        this.damage = 13;
+        this.shootCooldown = Math.random() * 70;
+        this.shootInterval = 135;
+        break;
+
+      case "splitter":
+        this.width = 48;
+        this.height = 48;
+        this.maxHealth = 105 + (wave - 1) * 18;
+        this.speed = 0.9 + (wave - 1) * 0.08;
+        this.damage = 14;
+        break;
+
       case "grunt":
       default:
         this.width = 40;
@@ -69,15 +97,26 @@ class Enemy {
     // SHOOTER BEHAVIOR
     // =========================
 
-    if (this.type === "shooter") {
+    if (this.type === "charger") {
+      if (this.chargeTimer > 0) {
+        this.chargeTimer--;
+      } else if (this.chargeClock > 0) {
+        this.chargeClock--;
+      } else {
+        this.chargeTimer = 18;
+        this.chargeClock = 100;
+      }
+    }
+
+    if (this.type === "shooter" || this.type === "warden") {
       // Move toward player until reaching shooting distance
-      if (distance > 280) {
+      if (distance > (this.type === "warden" ? 330 : 280)) {
         this.x += (dx / distance) * this.speed;
         this.y += (dy / distance) * this.speed;
       }
 
       // Move away if player gets too close
-      if (distance < 190 && distance > 0) {
+      if (distance < (this.type === "warden" ? 240 : 190) && distance > 0) {
         this.x -= (dx / distance) * this.speed;
         this.y -= (dy / distance) * this.speed;
       }
@@ -91,8 +130,11 @@ class Enemy {
       // =========================
 
       if (distance > 45) {
-        this.x += (dx / distance) * this.speed;
-        this.y += (dy / distance) * this.speed;
+        const movementSpeed = this.type === "charger" && this.chargeTimer > 0
+          ? this.speed * 2.8
+          : this.speed;
+        this.x += (dx / distance) * movementSpeed;
+        this.y += (dy / distance) * movementSpeed;
       }
     }
 
@@ -119,7 +161,7 @@ class Enemy {
   }
 
   canShoot() {
-    if (this.type !== "shooter") {
+    if (this.type !== "shooter" && this.type !== "warden") {
       return false;
     }
 
@@ -189,6 +231,21 @@ class Enemy {
         symbol = "✦";
         break;
 
+      case "charger":
+        color = "#ff8a3d";
+        symbol = "➤";
+        break;
+
+      case "warden":
+        color = "#45e0c0";
+        symbol = "⬡";
+        break;
+
+      case "splitter":
+        color = "#ff4fc8";
+        symbol = "✣";
+        break;
+
       case "grunt":
       default:
         color = "#ff0055";
@@ -213,7 +270,7 @@ class Enemy {
     ctx.lineWidth = 2;
 
     // Shooter
-    if (this.type === "shooter") {
+    if (this.type === "shooter" || this.type === "warden") {
       ctx.beginPath();
 
       ctx.arc(
@@ -225,6 +282,14 @@ class Enemy {
       );
 
       ctx.stroke();
+
+      if (this.type === "warden") {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, this.width / 2 + 6, 0, Math.PI * 2);
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       ctx.fillStyle = "rgba(0, 170, 255, 0.15)";
       ctx.fill();
@@ -238,6 +303,35 @@ class Enemy {
       ctx.moveTo(centerX, centerY - 12);
       ctx.lineTo(centerX, centerY + 12);
 
+      ctx.stroke();
+    }
+
+    // Charger
+    else if (this.type === "charger") {
+      ctx.beginPath();
+      ctx.moveTo(this.x + 3, centerY);
+      ctx.lineTo(centerX, this.y + 3);
+      ctx.lineTo(this.x + this.width - 3, centerY);
+      ctx.lineTo(centerX, this.y + this.height - 3);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255, 138, 61, 0.18)";
+      ctx.fill();
+    }
+
+    // Splitter
+    else if (this.type === "splitter") {
+      ctx.beginPath();
+      ctx.moveTo(centerX, this.y);
+      ctx.lineTo(this.x + this.width, centerY);
+      ctx.lineTo(centerX, this.y + this.height);
+      ctx.lineTo(this.x, centerY);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.moveTo(this.x + 12, this.y + 12);
+      ctx.lineTo(this.x + this.width - 12, this.y + this.height - 12);
+      ctx.moveTo(this.x + this.width - 12, this.y + 12);
+      ctx.lineTo(this.x + 12, this.y + this.height - 12);
       ctx.stroke();
     }
 

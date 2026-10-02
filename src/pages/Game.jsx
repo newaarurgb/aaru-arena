@@ -7,11 +7,13 @@ import { Link, useNavigate } from "react-router-dom";
 import "../styles/multiplayer.css";
 
 import Player from "../game/Player";
+import Enemy from "../game/Enemy";
 import Spawner from "../game/Spawner";
 import Progression from "../game/Progression";
 import Projectile from "../game/Projectile";
 import PowerUp from "../game/PowerUp";
 import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
+import { readCareerProgress, recordEnemyDefeat, recordRunResult, recordWaveClear } from "../data/career";
 
 const DIFFICULTIES = {
   easy: {
@@ -163,6 +165,7 @@ function Game() {
   const lastNetworkSyncRef = useRef(0);
   const localPlayerIdRef = useRef(null);
   const pendingStartRef = useRef(false);
+  const runRecordedRef = useRef(false);
 
   // =====================================================
   // SHARED CO-OP WORLD
@@ -236,26 +239,30 @@ function Game() {
   // =====================================================
 
   const [playerName, setPlayerName] = useState(
-    () => sessionStorage.getItem("aaruMultiplayerName") || JSON.parse(localStorage.getItem("aaruProfile") || "null")?.displayName || ""
+    () => JSON.parse(localStorage.getItem("aaruProfile") || "null")?.displayName || ""
   );
   const [scoreSaved, setScoreSaved] = useState(false);
 
-  const [gameStarted, setGameStarted] = useState(
-    () => sessionStorage.getItem("aaruMultiplayerStarted") === "true"
-  );
+  const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [gameMode, setGameMode] = useState(
-    () => sessionStorage.getItem("aaruMultiplayerRoom") ? "multiplayer" : "solo"
-  );
+  const gameMode = "solo";
   const [difficulty, setDifficulty] = useState("hard");
   const [environment, setEnvironment] = useState(
-    () => sessionStorage.getItem("aaruEnvironment") || "neon"
+    () => {
+      const savedWorld = sessionStorage.getItem("aaruEnvironment") || "neon";
+      return readCareerProgress().unlockedWorlds.includes(savedWorld)
+        ? savedWorld
+        : "neon";
+    }
   );
   const [playerDesign, setPlayerDesign] = useState(
     () => sessionStorage.getItem("aaruPlayerDesign") || "aqua"
   );
-  const [roomCode, setRoomCode] = useState(
-    () => sessionStorage.getItem("aaruMultiplayerRoom") || ""
+  const [fighterId] = useState(
+    () => sessionStorage.getItem("aaruFighter") || readCareerProgress().selectedFighter || "vanguard"
+  );
+  const [runMode] = useState(
+    () => sessionStorage.getItem("aaruRunMode") || "campaign"
   );
   const [multiplayerStatus, setMultiplayerStatus] = useState("OFFLINE");
   const [multiplayerPlayers, setMultiplayerPlayers] = useState([]);
@@ -788,17 +795,6 @@ function Game() {
     }
   };
 
-  useEffect(() => {
-    if (
-      gameMode === "multiplayer" &&
-      gameStarted &&
-      roomCode &&
-      !multiplayerSocketRef.current
-    ) {
-      connectMultiplayer();
-    }
-  }, [gameMode, gameStarted, roomCode]);
-
   const saveScoreToLeaderboard = () => {
     const cleanName = playerName.trim().slice(0, 16);
     if (!cleanName || scoreSaved) return;
@@ -922,6 +918,24 @@ function Game() {
     });
   }
 
+  function createSplitterChildren(enemy) {
+    if (enemy.type !== "splitter") return [];
+    const canvas = canvasRef.current;
+    const width = canvas?.width || window.innerWidth;
+    const height = canvas?.height || window.innerHeight;
+    return [-1, 1].map((direction) => {
+      const child = new Enemy(
+        Math.max(0, Math.min(width - 30, enemy.x + direction * 24)),
+        Math.max(0, Math.min(height - 30, enemy.y + direction * 14)),
+        enemy.wave,
+        "runner"
+      );
+      child.health = Math.ceil(child.maxHealth * 0.65);
+      child.maxHealth = child.health;
+      return child;
+    });
+  }
+
   // =====================================================
   // COLLECT POWER-UP
   // =====================================================
@@ -1012,6 +1026,8 @@ function Game() {
   // =====================================================
 
   function handleEnemyDefeated() {
+    recordEnemyDefeat();
+
     if (difficultySettings.defeatHeal > 0 && playerRef.current) {
       playerRef.current.health = Math.min(
         playerRef.current.maxHealth || 100,
@@ -1060,6 +1076,7 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
+    recordWaveClear();
     triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
@@ -1394,6 +1411,7 @@ function Game() {
 
           if (dead) {
             enemiesRef.current.splice(e, 1);
+            enemiesRef.current.push(...createSplitterChildren(enemy));
             if (enemy.type === "boss") {
               handleBossDefeated(enemyCenterX, enemyCenterY);
             } else {
@@ -1774,7 +1792,7 @@ function Game() {
       // =====================================================
 
       if (
-        enemy.type === "shooter" &&
+        (enemy.type === "shooter" || enemy.type === "warden") &&
         enemy.canShoot()
       ) {
         const direction =
@@ -1914,6 +1932,7 @@ function Game() {
 
     const attackRange = 85;
 
+    const splitterChildren = [];
     enemiesRef.current = enemiesRef.current.filter((enemy) => {
       const playerCenterX = currentPlayer.x + currentPlayer.width / 2;
       const playerCenterY = currentPlayer.y + currentPlayer.height / 2;
@@ -1940,6 +1959,7 @@ function Game() {
       }
 
       if (dead) {
+        splitterChildren.push(...createSplitterChildren(enemy));
         if (enemy.type === "boss") {
           handleBossDefeated(enemyCenterX, enemyCenterY);
         } else {
@@ -1951,6 +1971,7 @@ function Game() {
 
       return true;
     });
+    enemiesRef.current.push(...splitterChildren);
   }
 
   performMeleeAttack.lastAttack = 0;
@@ -2047,11 +2068,13 @@ function Game() {
           canvas.height / 2 - 20,
           playerDesign,
           playerName || profile.displayName || "PILOT",
-          profile.avatar || 1
+          profile.avatar || 1,
+          fighterId
         );
 
       playerRef.current =
         player;
+      setHealth(player.health);
     }
 
 
@@ -3183,6 +3206,7 @@ function Game() {
         playerRef.current.health = playerRef.current.maxHealth || 100;
         setHealth(playerRef.current.health);
         setWaveCleared(true);
+        recordWaveClear();
 
         triggerScreenShake(7);
 
@@ -3323,6 +3347,17 @@ function Game() {
       waveCleared;
   }, [waveCleared]);
 
+  useEffect(() => {
+    if ((!gameOver && !victory) || runRecordedRef.current) return;
+    runRecordedRef.current = true;
+    recordRunResult({
+      worldId: environment,
+      score: progressionRef.current.score,
+      won: victory,
+      tournament: runMode === "tournament",
+    });
+  }, [gameOver, victory, environment, runMode]);
+
   // =====================================================
   // NEXT WAVE
   // =====================================================
@@ -3377,6 +3412,7 @@ function Game() {
   // =====================================================
 
   const restartGame = () => {
+    runRecordedRef.current = false;
     progressionRef.current =
       new Progression();
 
@@ -3586,10 +3622,12 @@ function Game() {
       {!gameStarted && (
         <div className="game-overlay multiplayer-lobby-overlay">
           <div className="overlay-box multiplayer-lobby-box">
-            <p className="multiplayer-kicker">AARU ARENA // DEPLOYMENT</p>
-            <h1>SET UP YOUR DEPLOYMENT</h1>
+            <p className="multiplayer-kicker">
+              AARU ARENA // {runMode === "tournament" ? "ARENA CUP" : "CAMPAIGN DEPLOYMENT"}
+            </p>
+            <h1>{runMode === "tournament" ? "SCORE ATTACK" : "PREPARE YOUR RUN"}</h1>
             <p className="multiplayer-subtitle">
-              SET YOUR CALLSIGN, CHOOSE A MODE, THEN DEPLOY.
+              SET YOUR CALLSIGN, PREPARE YOUR LOADOUT, THEN DEPLOY.
             </p>
 
             <div className="lobby-step">
@@ -3602,35 +3640,16 @@ function Game() {
                   value={playerName}
                   onChange={(event) => {
                     setPlayerName(event.target.value.toUpperCase().slice(0, 16));
-                    setMultiplayerError("");
                   }}
                   placeholder="ENTER CALLSIGN"
                 />
                 <span className="callsign-avatar-badge">◉{profile.avatar || 1}</span>
               </div>
-            </div>
-
-            <div className="lobby-step">
-              <p className="lobby-step-label">02 // GAME MODE</p>
-              <div className="multiplayer-mode-buttons">
-                <button
-                  className={`restart-button ${gameMode === "multiplayer" ? "mode-active" : ""}`}
-                  onClick={() => {
-                    setGameMode("multiplayer");
-                    setMultiplayerError("");
-                    navigate("/multiplayer");
-                  }}
-                >
-                  MULTIPLAYER
-                </button>
-              </div>
-              {gameMode === "solo" && (
-                <p className="solo-default-note">SOLO MODE DEFAULT</p>
-              )}
+              {multiplayerError && <p className="multiplayer-error">{multiplayerError}</p>}
             </div>
 
             <div className="lobby-step loadout-links-step">
-              <p className="lobby-step-label">03 // DIFFICULTY</p>
+              <p className="lobby-step-label">02 // DIFFICULTY</p>
               <div className="difficulty-options">
                 {Object.entries(DIFFICULTIES).map(([key, setting]) => (
                   <button
@@ -3647,7 +3666,7 @@ function Game() {
             </div>
 
             <div className="lobby-step loadout-links-step">
-              <p className="lobby-step-label">04 // LOADOUT</p>
+              <p className="lobby-step-label">03 // LOADOUT</p>
               <div className="loadout-link-grid">
                 <Link className="loadout-link-button" to="/environment">
                   <span>LOADOUT 01</span>
@@ -3662,56 +3681,8 @@ function Game() {
               </div>
             </div>
 
-            {gameMode === "multiplayer" && (
-              <>
-                <input
-                  className="leaderboard-name-input multiplayer-input room-code-input"
-                  type="text"
-                  maxLength={6}
-                  value={roomCode}
-                  onChange={(event) => {
-                    setRoomCode(
-                      event.target.value
-                        .toUpperCase()
-                        .replace(/[^A-Z0-9]/g, "")
-                        .slice(0, 6)
-                    );
-                    setMultiplayerError("");
-                  }}
-                  placeholder="6-CHAR ROOM CODE"
-                />
-
-                <button
-                  className="restart-button connect-room-button"
-                  onClick={() => {
-                    connectMultiplayer();
-                  }}
-                >
-                  JOIN ROOM
-                </button>
-
-                <p className="multiplayer-status">
-                  {multiplayerStatus}
-                </p>
-
-                {multiplayerPlayers.length > 0 && (
-                  <div className="room-player-list">
-                    {multiplayerPlayers.map((player) => (
-                      <span key={player.id}>
-                        ◈ {player.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {multiplayerError && (
-              <p className="multiplayer-error">{multiplayerError}</p>
-            )}
-
             <div className="lobby-step lobby-deploy-step">
-              <p className="lobby-step-label">05 // DEPLOY</p>
+              <p className="lobby-step-label">04 // DEPLOY</p>
               <button
                 className="restart-button multiplayer-deploy-button"
                 onClick={startArena}
@@ -3735,9 +3706,6 @@ function Game() {
 
         <div className="game-title">
           AARU ARENA
-          {gameMode === "multiplayer" && gameStarted && (
-            <small className="multiplayer-badge">ROOM {roomCode}</small>
-          )}
         </div>
 
         <div className="game-stats">
@@ -4109,12 +4077,6 @@ function Game() {
         <span>
           LEFT CLICK — SHOOT
         </span>
-
-        {gameMode === "multiplayer" && gameStarted && (
-          <span>
-            ONLINE — {Math.max(1, multiplayerPlayers.length)}
-          </span>
-        )}
 
       </div>
 

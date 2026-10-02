@@ -99,19 +99,27 @@ class Spawner {
       } else if (batchWave === 2) {
         type = random < 0.35 ? "runner" : "grunt";
       } else if (batchWave === 3) {
-        if (random < 0.20) {
+        if (random < 0.16) {
+          type = "splitter";
+        } else if (random < 0.34) {
           type = "tank";
-        } else if (random < 0.55) {
+        } else if (random < 0.58) {
           type = "runner";
         } else {
           type = "grunt";
         }
       } else {
-        if (random < 0.20) {
+        if (random < 0.14) {
+          type = "warden";
+        } else if (random < 0.28) {
+          type = "charger";
+        } else if (random < 0.42) {
+          type = "splitter";
+        } else if (random < 0.60) {
           type = "shooter";
-        } else if (random < 0.40) {
+        } else if (random < 0.76) {
           type = "tank";
-        } else if (random < 0.65) {
+        } else if (random < 0.9) {
           type = "runner";
         } else {
           type = "grunt";

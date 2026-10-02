@@ -79,7 +79,7 @@ function Intro() {
       <div className="intro-planet">
         <div className="intro-planet-light" />
       </div>
-      <div className="intro-signal">SIGNAL ACQUIRED // ARENA NETWORK ONLINE</div>
+      <div className="intro-signal">PILOT SIGNAL // SOLO CAMPAIGN READY</div>
       <section className="intro-content">
         <p className="intro-kicker">AARU SYSTEMS PRESENTS</p>
         <h1>AARU<br /><span>ARENA</span></h1>

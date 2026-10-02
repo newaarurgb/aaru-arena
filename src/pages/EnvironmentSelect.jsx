@@ -1,10 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ENVIRONMENTS } from "../data/loadouts";
+import { readCareerProgress } from "../data/career";
 import "../styles/loadout.css";
 
 function EnvironmentSelect() {
   const navigate = useNavigate();
-  const selected = sessionStorage.getItem("aaruEnvironment") || "neon";
+  const unlockedWorlds = readCareerProgress().unlockedWorlds;
+  const savedWorld = sessionStorage.getItem("aaruEnvironment") || "neon";
+  const selected = unlockedWorlds.includes(savedWorld) ? savedWorld : "neon";
 
   const chooseEnvironment = (key) => {
     sessionStorage.setItem("aaruEnvironment", key);
@@ -19,20 +22,24 @@ function EnvironmentSelect() {
         <p className="loadout-subtitle">SELECT THE WORLD WHERE YOUR MATCH WILL TAKE PLACE.</p>
 
         <div className="loadout-grid environment-grid">
-          {Object.entries(ENVIRONMENTS).map(([key, environment]) => (
+          {Object.entries(ENVIRONMENTS).map(([key, environment]) => {
+            const unlocked = unlockedWorlds.includes(key);
+            return (
             <button
-              className={`loadout-card ${selected === key ? "selected" : ""}`}
+              className={`loadout-card ${selected === key ? "selected" : ""} ${unlocked ? "" : "locked"}`}
               key={key}
               type="button"
+              disabled={!unlocked}
               style={{ "--loadout-accent": environment.accent, "--loadout-base": environment.base }}
               onClick={() => chooseEnvironment(key)}
             >
               <span className="loadout-planet" />
               <strong>{environment.name}</strong>
               <small>{environment.description}</small>
-              <em>{selected === key ? "SELECTED" : "DEPLOY HERE"}</em>
+              <em>{!unlocked ? "DEFEAT THE PREVIOUS WORLD BOSS" : selected === key ? "SELECTED" : "DEPLOY HERE"}</em>
             </button>
-          ))}
+            );
+          })}
         </div>
 
         <nav className="loadout-actions">

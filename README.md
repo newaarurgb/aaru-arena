@@ -1,25 +1,10 @@
 # AARU ARENA
 
-## Multiplayer server
+## Solo career
 
-Run the WebSocket server locally in a second terminal:
+The offline career hub includes a six-world campaign, unlockable pilot classes, combat quests, and a local score-attack tournament. Campaign progress and tournament results are saved in the browser on the current device.
 
-```bash
-npm run multiplayer
-```
-
-The server generates six-character room codes, supports up to 10 players per room, and passes host start signals and player positions to the game.
-
-For a deployed frontend, set `VITE_WS_URL` to the public `wss://` URL of the deployed WebSocket server. Vercel serves the frontend, but it does not run this long-lived WebSocket process; the app requires one shared server for every player.
-
-The included `render.yaml` can deploy the WebSocket server to Render. After deployment:
-
-1. Deploy the included `render.yaml` as a Render Blueprint. It starts `multiplayer-server.cjs`.
-2. Copy the Render service URL and change `https://` to `wss://`.
-3. Add it as the Vercel environment variable `VITE_WS_URL` for Production (and Preview if needed).
-4. Redeploy the Vercel frontend so the URL is included in the client build.
-
-Without this variable, multiplayer shows `SERVER URL REQUIRED` on the deployed site rather than connecting to a non-shared Vercel function. Local development automatically uses `ws://localhost:3001`.
+Three additional enemy types join later waves: chargers, wardens, and splitters. Defeating a splitter releases two weaker runners.
 
 ## Frontend
 
@@ -27,8 +12,6 @@ Without this variable, multiplayer shows `SERVER URL REQUIRED` on the deployed s
 npm run dev
 npm run build
 ```
-
-The multiplayer entry is available from the deployment screen through the `MULTIPLAYER` button.
 
 ---
 
