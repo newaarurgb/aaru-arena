@@ -135,6 +135,46 @@
   text-align: left;
 }
 
+.sector-intel {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--career-line);
+}
+
+.sector-intel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sector-intel-grid article {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-left: 2px solid #f0c568;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.sector-intel-grid strong,
+.tournament-intel strong { color: #f2f6f5; font: 800 10px monospace; }
+.sector-intel-grid span,
+.sector-intel-grid small,
+.tournament-intel span { color: #9baeb0; font: 10px/1.45 monospace; }
+.sector-intel-grid b { color: #f0c568; font: 800 9px monospace; }
+.tournament-intel { display: grid; gap: 7px; margin: 4px 0 12px; }
+
+.quest-launch {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(83, 215, 189, 0.45);
+  background: transparent;
+  color: #71e1c9;
+  font: 800 9px monospace;
+  cursor: pointer;
+}
+
+.quest-launch:hover { background: rgba(83, 215, 189, 0.1); }
+
 .career-world:not(:disabled),
 .career-pilot:not(:disabled) {
   cursor: pointer;
@@ -291,7 +331,7 @@
 
 .career-quest {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) auto minmax(100px, 0.6fr) 75px;
+  grid-template-columns: minmax(150px, 1fr) auto minmax(100px, 0.6fr) 75px auto;
   align-items: center;
   gap: 16px;
   padding: 16px 4px;
@@ -358,6 +398,8 @@
   .quest-reward { grid-column: 1; }
   .quest-progress { grid-column: 1; }
   .career-quest > small { grid-column: 2; grid-row: 2 / span 2; }
+  .quest-launch { grid-column: 1 / -1; }
+  .sector-intel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tournament-layout { grid-template-columns: 1fr; }
   .tournament-event { padding: 20px 0; }
   .tournament-table-wrap { padding: 20px 0; border-top: 1px solid var(--career-line); border-left: 0; }
@@ -370,6 +412,7 @@
   .career-pilot-grid { grid-template-columns: 1fr; }
   .career-tabs button { padding-inline: 12px; }
   .career-section-heading { align-items: start; flex-direction: column; }
+  .sector-intel-grid { grid-template-columns: 1fr; }
 }
 
 .combat-briefing-overlay {

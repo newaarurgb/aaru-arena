@@ -1,4 +1,5 @@
 import Enemy from "./Enemy";
+import { getSectorRoster } from "../data/sectorIntel";
 
 class Spawner {
   static getSafeSpawnPoint(
@@ -69,16 +70,12 @@ class Spawner {
     const width = Math.max(1, canvasWidth || 1);
     const height = Math.max(1, canvasHeight || 1);
     const enemies = [];
-    const roster = ["grunt", "runner", "tank", "shooter", "charger", "warden", "splitter"];
-    const seed = (sector - 1) * 2654435761;
-    const levelRoster = Array.from({ length: 3 }, (_, index) =>
-      roster[(Math.floor(seed % roster.length) + index * 3 + index) % roster.length]
-    );
+    const levelRoster = getSectorRoster(sector).map((enemy) => enemy.type);
     const safeRadius = 220 + Math.min(500, safeWave * 25 + sector * 8);
-    const spawnMultiplier = difficulty === "difficult" ? 1.5 : difficulty === "hard" ? 1.25 : 1;
+    const spawnMultiplier = difficulty === "difficult" ? 1.8 : difficulty === "hard" ? 1.25 : 1;
     const count = Math.min(
       600,
-      Math.ceil((5 + (safeWave - 1) * 2 + sector - 1) * spawnMultiplier)
+      Math.ceil((5 + (safeWave - 1) * 2 + Math.floor((sector - 1) * 1.5)) * spawnMultiplier)
     );
 
     for (let index = 0; index < count; index++) {

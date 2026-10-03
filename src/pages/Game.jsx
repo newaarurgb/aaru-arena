@@ -13,7 +13,8 @@ import Progression from "../game/Progression";
 import Projectile from "../game/Projectile";
 import PowerUp from "../game/PowerUp";
 import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
-import { FIGHTERS, readCareerProgress, recordEnemyDefeat, recordRunResult, recordWaveClear } from "../data/career";
+import { collectCareerCredits, FIGHTERS, QUESTS, readCareerProgress, recordEnemyDefeat, recordRunResult, recordWaveClear } from "../data/career";
+import { getSectorIdentity } from "../data/sectorIntel";
 
 const DIFFICULTIES = {
   easy: {
@@ -34,23 +35,13 @@ const DIFFICULTIES = {
   },
   difficult: {
     name: "DIFFICULT",
-    description: "Low enemy damage, more recovery",
-    healthMultiplier: 1.1,
-    damageMultiplier: 0.4,
-    defeatHeal: 18,
-    healthDropChance: 0.55,
+    description: "Harder enemies, larger waves, fewer drops",
+    healthMultiplier: 1.65,
+    damageMultiplier: 1.35,
+    defeatHeal: 0,
+    healthDropChance: 0.16,
   },
 };
-
-const ENEMY_FIELD_GUIDE = [
-  { type: "grunt", name: "GRUNT", power: "Aimed single energy bolt", weakness: "ENERGY", counter: "Use the Pulse Cannon or Cryo Lance." },
-  { type: "runner", name: "RUNNER", power: "Fast triple shots", weakness: "KINETIC", counter: "Use Striker spread, Siege shells, or Piercer rounds." },
-  { type: "tank", name: "TANK", power: "Slow six-way radial bursts", weakness: "ENERGY", counter: "Dodge the ring, then return energy fire." },
-  { type: "shooter", name: "SHOOTER", power: "Long-range paired aimed shots", weakness: "ENERGY", counter: "Close the gap or use the piercing rifle." },
-  { type: "charger", name: "CHARGER", power: "Telegraphed dash and five-shot fan", weakness: "KINETIC", counter: "Bait the dash, then fire a kinetic weapon." },
-  { type: "warden", name: "WARDEN", power: "Five-lane spread", weakness: "ENERGY", counter: "Break its line and use energy shots." },
-  { type: "splitter", name: "SPLITTER", power: "Three-shot burst; splits into runners", weakness: "KINETIC", counter: "Hit it with kinetic damage before it divides." },
-];
 
 class BossEnemy {
   constructor(x, y, sector = 1, variantIndex = 0) {
@@ -292,6 +283,7 @@ function Game() {
     () => JSON.parse(localStorage.getItem("aaruProfile") || "null")?.displayName || ""
   );
   const [scoreSaved, setScoreSaved] = useState(false);
+  const [careerCredits, setCareerCredits] = useState(() => readCareerProgress().credits || 0);
 
   const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -326,6 +318,7 @@ function Game() {
       return !savedProfile.email || savedProfile.guest ? "campaign" : savedMode;
     }
   );
+  const [questId] = useState(() => sessionStorage.getItem("aaruQuestId") || "");
   const [campaignLevel] = useState(() => {
     const savedProfile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
     return !savedProfile.email || savedProfile.guest
@@ -954,6 +947,11 @@ function Game() {
   // =====================================================
 
   function spawnPowerUp(x, y) {
+    if (!isGuest && Math.random() < 0.2) {
+      powerUpsRef.current.push(new PowerUp(x - 16, y - 16, "credits"));
+      return;
+    }
+
     if (Math.random() > difficultySettings.healthDropChance) {
       return;
     }
@@ -1010,6 +1008,14 @@ function Game() {
   // =====================================================
 
   function collectPowerUp(type) {
+    if (type === "credits") {
+      const reward = 10 + Math.floor(campaignLevel / 2);
+      const progress = collectCareerCredits(reward);
+      setCareerCredits(progress.credits);
+      showPowerUpMessage(`CREDITS +${reward}`);
+      return;
+    }
+
     // -----------------------------------------------------
     // HEALTH
     // -----------------------------------------------------
@@ -1145,7 +1151,7 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
-    if (!isGuest) recordWaveClear();
+    if (!isGuest) recordWaveClear({ sector: campaignLevel });
     triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
@@ -3293,7 +3299,7 @@ function Game() {
         playerRef.current.health = playerRef.current.maxHealth || 100;
         setHealth(playerRef.current.health);
         setWaveCleared(true);
-        if (!isGuest) recordWaveClear();
+        if (!isGuest) recordWaveClear({ sector: campaignLevel });
 
         triggerScreenShake(7);
 
@@ -3442,6 +3448,7 @@ function Game() {
       score: progressionRef.current.score,
       won: victory,
       tournament: runMode === "tournament",
+      mode: runMode,
       campaignLevel,
     });
   }, [gameOver, victory, environment, runMode, campaignLevel, isGuest]);
@@ -3664,6 +3671,8 @@ function Game() {
   // =====================================================
 
   const activePowerUps = [];
+  const sectorEnemyIntel = getSectorIdentity(campaignLevel).roster;
+  const activeQuest = QUESTS.find((quest) => quest.id === questId);
 
   if (rapidFireRef.current) {
     activePowerUps.push({
@@ -3714,9 +3723,9 @@ function Game() {
             <p className="multiplayer-kicker">
               AARU ARENA // {runMode === "tournament" ? "ARENA CUP" : "CAMPAIGN DEPLOYMENT"}
             </p>
-            <h1>{runMode === "tournament" ? "SCORE ATTACK" : "PREPARE YOUR RUN"}</h1>
+            <h1>{runMode === "tournament" ? "SCORE ATTACK" : runMode === "quest" ? "QUEST DEPLOYMENT" : "PREPARE YOUR RUN"}</h1>
             <p className="multiplayer-subtitle">
-              SET YOUR CALLSIGN, PREPARE YOUR LOADOUT, THEN DEPLOY.
+              {activeQuest ? `${activeQuest.name} // ${activeQuest.detail}` : `SECTOR ${campaignLevel}`} // FIVE WAVES // PREPARE YOUR LOADOUT.
             </p>
 
             <div className="lobby-step">
@@ -3801,24 +3810,24 @@ function Game() {
       {showCombatBriefing && (
         <div className="game-overlay combat-briefing-overlay">
           <section className="combat-briefing-panel">
-            <p className="multiplayer-kicker">SECTOR {campaignLevel} // COMBAT INTEL</p>
+            <p className="multiplayer-kicker">{runMode === "tournament" ? "ARENA CUP" : activeQuest ? `QUEST // ${activeQuest.name}` : "CAMPAIGN"} // SECTOR {campaignLevel} COMBAT INTEL</p>
             <h1>KNOW YOUR TARGETS</h1>
             <div className="briefing-hero">
               <span>YOUR HERO // {FIGHTERS[fighterId]?.name || "VANGUARD"}</span>
               <strong>{FIGHTERS[fighterId]?.weapon || "PULSE CANNON"}</strong>
-              <small>{FIGHTERS[fighterId]?.weaponDetail || "Balanced single energy bolts"} // {playerRef.current?.maxHealth || FIGHTERS[fighterId]?.health || 100} HP</small>
+              <small>{FIGHTERS[fighterId]?.weaponDetail || "Balanced single energy bolts"} // {playerRef.current?.maxHealth || FIGHTERS[fighterId]?.health || 100} HP // POWER +{playerRef.current?.powerLevel || 0}</small>
             </div>
             <div className="briefing-enemy-grid">
-              {ENEMY_FIELD_GUIDE.map((enemy) => (
+              {sectorEnemyIntel.map((enemy) => (
                 <article className="briefing-enemy" key={enemy.type}>
-                  <strong>{enemy.name}</strong>
+                  <strong>{enemy.type.toUpperCase()}-{campaignLevel}</strong>
                   <span>{enemy.power}</span>
                   <b>WEAK TO {enemy.weakness}</b>
                   <small>{enemy.counter}</small>
                 </article>
               ))}
             </div>
-            <p className="briefing-tip">CONTACT HITS ARE REDUCED. MOVE BETWEEN ATTACKS; MATCH ENERGY OR KINETIC DAMAGE TO THE TARGET.</p>
+            <p className="briefing-tip">COLLECT GOLD CREDIT SHARDS, CLEAR WAVES FOR CREDITS, AND BEAT THE BOSS FOR A SECTOR PAYOUT AND PERMANENT HERO POWER.</p>
             <button
               className="career-primary briefing-continue"
               type="button"
@@ -3856,6 +3865,8 @@ function Game() {
           <span>
             SCORE {score}
           </span>
+
+          {!isGuest && <span>CREDITS {careerCredits}</span>}
 
           <span>
             {wave >= 5 && !victory
@@ -4315,6 +4326,7 @@ function Game() {
             <p>Score: {score}</p>
             <p>Level: {level}</p>
             <p>SECTOR {campaignLevel} CLEARED</p>
+            {!isGuest && <p>+{100 + Math.max(0, campaignLevel - 1) * 15} CREDITS // PERMANENT HERO POWER +1</p>}
 
             {!scoreSaved ? (
               <>

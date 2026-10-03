@@ -54,6 +54,11 @@ class PowerUp {
         symbol = "M";
         break;
 
+      case "credits":
+        color = "#f1c65f";
+        symbol = "$";
+        break;
+
       default:
         color = "#00ffff";
         symbol = "?";

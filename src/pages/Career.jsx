@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CAREER_WORLDS, FIGHTERS, getUnlockedFighters, QUESTS, readCareerProgress, saveSelectedFighter } from "../data/career";
+import { CAREER_WORLDS, FIGHTERS, getUnlockedFighters, purchaseFighter, QUESTS, readCareerProgress, saveSelectedFighter } from "../data/career";
+import { getSectorIdentity } from "../data/sectorIntel";
 import "../styles/career.css";
 
 const tabs = ["CAMPAIGN", "PILOTS", "QUESTS", "TOURNAMENT"];
@@ -20,7 +21,7 @@ function Career() {
   const fighters = getUnlockedFighters(progress);
   const selectedFighter = progress.selectedFighter || "vanguard";
 
-  const deploy = (mode) => {
+  const deploy = (mode, questId = "") => {
     if (profile.guest) {
       navigate("/intro");
       return;
@@ -29,6 +30,8 @@ function Career() {
     sessionStorage.setItem("aaruEnvironment", world.id);
     sessionStorage.setItem("aaruCampaignLevel", String(selectedLevel));
     sessionStorage.setItem("aaruRunMode", mode);
+    if (questId) sessionStorage.setItem("aaruQuestId", questId);
+    else sessionStorage.removeItem("aaruQuestId");
     navigate("/game");
   };
 
@@ -37,10 +40,18 @@ function Career() {
     setProgress(readCareerProgress());
   };
 
+  const buyFighter = (fighterId) => {
+    const result = purchaseFighter(fighterId);
+    setProgress(result.progress);
+    if (result.ok) saveSelectedFighter(fighterId);
+  };
+
   const unlockedLevel = progress.unlockedLevel || 1;
   const levelWindowStart = Math.max(1, unlockedLevel - 5);
   const displayedLevels = Array.from({ length: 11 }, (_, index) => levelWindowStart + index);
   const scores = progress.tournamentScores || [];
+  const sectorIntel = getSectorIdentity(selectedLevel);
+  const sectorWorld = CAREER_WORLDS[(selectedLevel - 1) % CAREER_WORLDS.length];
   const questValues = {
     kills: progress.kills,
     waves: progress.waves,
@@ -70,6 +81,8 @@ function Career() {
         <p className="career-kicker">AARU ARENA // PILOT RECORD</p>
         <h1>CAREER</h1>
         <div className="career-stats" aria-label="Career statistics">
+          <span><strong>{progress.credits}</strong> CREDITS</span>
+          <span><strong>+{progress.powerLevel || 0}</strong> HERO POWER</span>
           <span><strong>{progress.bosses}</strong> BOSSES</span>
           <span><strong>{progress.kills}</strong> ELIMINATIONS</span>
           <span><strong>{progress.runs}</strong> RUNS</span>
@@ -93,7 +106,7 @@ function Career() {
         <section className="career-section">
           <div className="career-section-heading">
             <div><p>PROCEDURAL SECTOR LADDER</p><h2>CAMPAIGN LEVELS</h2></div>
-            <span>SECTOR {unlockedLevel} // INFINITE FRONTIER</span>
+            <span>SECTOR {unlockedLevel} // {progress.credits} CREDITS</span>
           </div>
           <div className="career-world-grid">
             {displayedLevels.map((campaignLevel) => {
@@ -123,8 +136,24 @@ function Career() {
             })}
           </div>
           <div className="career-deploy-row">
-            <p>Sector {selectedLevel} // <strong>{FIGHTERS[selectedFighter]?.name || "VANGUARD"}</strong></p>
+            <p>Sector {selectedLevel} // <strong>{FIGHTERS[selectedFighter]?.name || "VANGUARD"}</strong> // POWER +{progress.powerLevel || 0}</p>
             <button className="career-primary" type="button" onClick={() => deploy("campaign")}>DEPLOY CAMPAIGN <span>→</span></button>
+          </div>
+          <div className="sector-intel">
+            <div className="career-section-heading">
+              <div><p>LEVEL {selectedLevel} // {sectorWorld.name}</p><h2>ENEMY INTEL</h2></div>
+              <span>5 WAVES // FINAL WAVE BOSS</span>
+            </div>
+            <div className="sector-intel-grid">
+              {sectorIntel.roster.map((enemy) => (
+                <article key={enemy.type}>
+                  <strong>{enemy.type.toUpperCase()}-{selectedLevel}</strong>
+                  <span>{enemy.power}</span>
+                  <b>WEAK TO {enemy.weakness}</b>
+                  <small>{enemy.counter}</small>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -140,10 +169,10 @@ function Career() {
               <button
                 key={fighter.id}
                 type="button"
-                disabled={!fighter.unlocked}
+                disabled={!fighter.unlocked && progress.credits < fighter.price}
                 className={`career-pilot ${selectedFighter === fighter.id ? "selected" : ""} ${!fighter.unlocked ? "locked" : ""}`}
                 style={{ "--pilot-color": fighter.shell?.color || "#38d9c4" }}
-                onClick={() => selectFighter(fighter.id)}
+                onClick={() => fighter.unlocked ? selectFighter(fighter.id) : buyFighter(fighter.id)}
               >
                 <span className="pilot-glyph" aria-hidden="true">✦</span>
                 <strong>{fighter.name}</strong>
@@ -151,7 +180,7 @@ function Career() {
                 <span className="pilot-stats">HP {fighter.health} <i /> SPD {fighter.speed} <i /> DMG {fighter.damage}</span>
                 <span className="pilot-weapon">{fighter.weapon}</span>
                 <small>{fighter.weaponDetail}</small>
-                <em>{fighter.unlocked ? selectedFighter === fighter.id ? "SELECTED" : "SELECT PILOT" : fighter.unlockText}</em>
+                <em>{fighter.unlocked ? selectedFighter === fighter.id ? "SELECTED" : "SELECT PILOT" : `BUY WEAPON + HERO // ${fighter.price} CREDITS`}</em>
               </button>
             ))}
           </div>
@@ -171,12 +200,34 @@ function Career() {
               return (
                 <article className="career-quest" key={quest.id}>
                   <div className="quest-copy"><strong>{quest.name}</strong><span>{quest.detail}</span></div>
-                  <div className="quest-reward">REWARD <b>{quest.reward}</b></div>
+                  <div className="quest-reward">REWARD <b>{quest.reward}</b> // {progress.completedQuests?.includes(quest.id) ? "CLAIMED" : "+75 CREDITS"}</div>
                   <div className="quest-progress"><span style={{ width: `${percent}%` }} /></div>
                   <small>{value.toLocaleString()} / {quest.target.toLocaleString()}</small>
+                  <button className="quest-launch" type="button" onClick={() => deploy("quest", quest.id)}>
+                    {progress.completedQuests?.includes(quest.id) ? "REPLAY QUEST" : "RUN QUEST"}
+                  </button>
                 </article>
               );
             })}
+          </div>
+        </section>
+      )}
+
+      {activeTab !== "CAMPAIGN" && (
+        <section className="sector-intel career-mode-intel">
+          <div className="career-section-heading">
+            <div><p>SECTOR {selectedLevel} // {sectorWorld.name}</p><h2>LEVEL ENEMY INTEL</h2></div>
+            <span>5 WAVES // RANDOM BOSS</span>
+          </div>
+          <div className="sector-intel-grid">
+            {sectorIntel.roster.map((enemy) => (
+              <article key={enemy.type}>
+                <strong>{enemy.type.toUpperCase()}-{selectedLevel}</strong>
+                <span>{enemy.power}</span>
+                <b>WEAK TO {enemy.weakness}</b>
+                <small>{enemy.counter}</small>
+              </article>
+            ))}
           </div>
         </section>
       )}
@@ -190,7 +241,7 @@ function Career() {
           <div className="tournament-layout">
             <div className="tournament-event">
               <div className="tournament-mark">AA<span> CUP</span></div>
-              <p>One pilot. Five waves. One boss. Post your best score from any unlocked world.</p>
+              <p>One pilot. Five waves. One random boss. Earn credits, level powers, and post a Cup score.</p>
               <label htmlFor="tournament-world">UNLOCKED SECTOR (1-{unlockedLevel})</label>
               <input
                 id="tournament-world"

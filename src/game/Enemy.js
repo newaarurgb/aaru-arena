@@ -6,7 +6,7 @@ class Enemy {
     this.type = type;
     this.wave = wave;
     this.sector = Math.max(1, Number(sector) || 1);
-    this.variantName = `${["ASH", "STORM", "FROST", "VOID", "EMBER", "MOSS", "TIDAL", "CHROME"][((this.sector - 1) % 8)]} ${type.toUpperCase()}-${this.sector}`;
+    this.variantName = `${["ASH", "STORM", "FROST", "VOID", "EMBER", "MOSS", "TIDAL", "CHROME"][((this.sector - 1) % 8)]} ${type.toUpperCase()}-${this.sector}-${wave}`;
     this.tint = `hsl(${(this.sector * 53 + type.length * 19) % 360} 88% 60%)`;
     this.weakness = ["runner", "charger", "splitter"].includes(type) ? "KINETIC" : "ENERGY";
 

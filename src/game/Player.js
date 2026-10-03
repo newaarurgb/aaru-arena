@@ -1,4 +1,4 @@
-import { FIGHTERS } from "../data/career";
+import { FIGHTERS, readCareerProgress } from "../data/career";
 
 class Player {
   constructor(x, y, design = "aqua", displayName = "PILOT", avatar = 1, fighterId = "vanguard") {
@@ -9,11 +9,16 @@ class Player {
     this.height = 40;
 
     const fighter = FIGHTERS[fighterId] || FIGHTERS.vanguard;
+    const profile = JSON.parse(localStorage.getItem("aaruProfile") || "null") || {};
+    const powerLevel = profile.email && !profile.guest
+      ? Math.max(0, readCareerProgress().powerLevel || 0)
+      : 0;
     this.fighterId = fighterId;
-    this.speed = fighter.speed;
+    this.powerLevel = powerLevel;
+    this.speed = fighter.speed + powerLevel * 0.08;
 
-    this.health = Math.max(100, fighter.health);
-    this.maxHealth = Math.max(100, fighter.health);
+    this.health = Math.max(100, fighter.health) + powerLevel * 5;
+    this.maxHealth = this.health;
 
     this.damageCooldown = false;
 
@@ -25,11 +30,11 @@ class Player {
 
     // Attack settings
     this.attackRange = 75;
-    this.attackDamage = fighter.damage;
+    this.attackDamage = fighter.damage * (1 + powerLevel * 0.045);
     this.weapon = fighter.weapon;
     this.weaponDetail = fighter.weaponDetail;
     this.weaponMode = fighter.weaponMode;
-    this.fireRate = fighter.fireRate;
+    this.fireRate = Math.max(120, fighter.fireRate * (1 - powerLevel * 0.015));
     this.projectileSpeed = fighter.projectileSpeed;
     this.projectileSize = fighter.projectileSize;
     this.projectileType = ["striker", "bulwark", "ranger"].includes(fighterId)
