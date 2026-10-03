@@ -23,7 +23,7 @@ const DIFFICULTIES = {
     healthMultiplier: 0.65,
     damageMultiplier: 0.7,
     defeatHeal: 0,
-    healthDropChance: 0.35,
+    healthDropChance: 0.55,
   },
   hard: {
     name: "HARD",
@@ -31,15 +31,15 @@ const DIFFICULTIES = {
     healthMultiplier: 1,
     damageMultiplier: 1,
     defeatHeal: 0,
-    healthDropChance: 0.25,
+    healthDropChance: 0.42,
   },
   difficult: {
     name: "DIFFICULT",
-    description: "Harder enemies, larger waves, fewer drops",
+    description: "Harder enemies, larger waves, more heart drops",
     healthMultiplier: 1.65,
     damageMultiplier: 1.35,
     defeatHeal: 0,
-    healthDropChance: 0.16,
+    healthDropChance: 0.38,
   },
 };
 
@@ -59,7 +59,7 @@ class BossEnemy {
     this.color = variant.color;
     this.weakness = variant.weakness;
     this.pattern = variant.pattern;
-    this.maxHealth = 1200 + (sector - 1) * 240;
+    this.maxHealth = 3200 + (sector - 1) * 520;
     this.health = this.maxHealth; this.speed = 1.15 + Math.min(2, (sector - 1) * 0.06); this.damage = 25 + sector * 1.2;
     this.hitFlash = 0; this.hitTimer = 0; this.shootTimer = 75; this.pulse = 0; this.spin = 0;
   }
@@ -188,6 +188,7 @@ function Game() {
   // =====================================================
 
   const waveClearedRef = useRef(false);
+  const bossDefeatedRef = useRef(false);
   const spawnedWaveRef = useRef(0);
 
   // Tracks whether the current wave actually spawned enemies.
@@ -519,10 +520,6 @@ function Game() {
           }
 
           if (message.type === "room_state") {
-            const players = Array.isArray(message.players)
-              ? message.players
-              : [];
-
             multiplayerHostIdRef.current = message.hostId || null;
             isMultiplayerHostRef.current =
               Boolean(
@@ -956,13 +953,7 @@ function Game() {
       return;
     }
 
-    const types = [
-      "health",
-      "rapid",
-      "damage",
-      "shield",
-      "magnet",
-    ];
+    const types = ["health", "health", "health", "rapid", "damage", "shield", "magnet"];
 
     const type =
       types[Math.floor(Math.random() * types.length)];
@@ -1151,7 +1142,6 @@ function Game() {
   }
 
   function handleBossDefeated(x, y) {
-    if (!isGuest) recordWaveClear({ sector: campaignLevel });
     triggerScreenShake(14);
     const progression = progressionRef.current;
     progression.addXP(250);
@@ -1161,11 +1151,8 @@ function Game() {
     setXPToNext(progression.xpToNextLevel);
     setLevel(progression.level);
     createHitEffect(x, y, 250, true);
-    waveClearedRef.current = true;
-    shootingRef.current = false;
-    setVictory(true);
-    setWaveCleared(false);
-    setPowerUpMessage("🏆 BOSS DEFEATED! +1000 SCORE");
+    bossDefeatedRef.current = true;
+    setPowerUpMessage("BOSS DEFEATED // CLEAR THE REMAINING ENEMIES");
   }
 
   // =====================================================
@@ -1254,6 +1241,10 @@ function Game() {
 
         maxLife: life,
       });
+    }
+
+    if (effectsRef.current.length > 420) {
+      effectsRef.current.splice(0, effectsRef.current.length - 420);
     }
   }
 
@@ -1925,10 +1916,10 @@ function Game() {
         // NORMAL CONTACT DAMAGE
         // ===================================================
 
-        const damage = Math.min(5, Math.max(3, (enemy.damage || 10) * 0.18));
+        const damage = Math.min(3, Math.max(2, (enemy.damage || 10) * 0.12));
 
         currentPlayer.health -= damage;
-        enemy.hitTimer = 150;
+        enemy.hitTimer = 180;
         playerDamageCooldownRef.current = 150;
 
         if (distance > 0) {
@@ -2211,6 +2202,7 @@ function Game() {
       waveCompletionLockedRef.current = false;
 
       spawnedWaveRef.current = wave;
+      if (wave >= 5) bossDefeatedRef.current = false;
 
       setEnemiesLeft(
         spawnedEnemies.length
@@ -3095,8 +3087,10 @@ function Game() {
               Math.sqrt(dx * dx + dy * dy);
 
             if (distance < 28) {
-              if (!shieldRef.current) {
-                player.health -= bullet.damage || 12;
+              if (!shieldRef.current && playerDamageCooldownRef.current <= 0) {
+                const incomingDamage = Math.min(5, Math.max(3, Number(bullet.damage) * 0.25 || 4));
+                player.health -= incomingDamage;
+                playerDamageCooldownRef.current = 75;
                 triggerScreenShake(4);
 
                 setHealth(
@@ -3285,6 +3279,23 @@ function Game() {
         !levelUpRef.current
       ) {
         waveCompletionLockedRef.current = true;
+
+        if (wave >= 5) {
+          if (bossDefeatedRef.current) {
+            waveClearedRef.current = true;
+            shootingRef.current = false;
+            setVictory(true);
+            setWaveCleared(false);
+            setPowerUpMessage("SECTOR CLEARED // BOSS AND ALL ENEMIES DEFEATED");
+            triggerScreenShake(14);
+            return;
+          }
+
+          waveCompletionLockedRef.current = false;
+          spawnedWaveRef.current = wave - 1;
+          animationRef.current = requestAnimationFrame(gameLoop);
+          return;
+        }
 
         waveClearedRef.current = true;
 
@@ -3575,6 +3586,7 @@ function Game() {
 
     waveClearedRef.current =
       false;
+    bossDefeatedRef.current = false;
 
     spawnedWaveRef.current = 0;
     waveStartedRef.current = false;
@@ -3673,6 +3685,15 @@ function Game() {
   const activePowerUps = [];
   const sectorEnemyIntel = getSectorIdentity(campaignLevel).roster;
   const activeQuest = QUESTS.find((quest) => quest.id === questId);
+
+  const deployNextSector = () => {
+    if (runMode === "campaign") {
+      sessionStorage.setItem("aaruCampaignLevel", String(campaignLevel + 1));
+      sessionStorage.setItem("aaruRunMode", "campaign");
+      sessionStorage.removeItem("aaruQuestId");
+    }
+    window.location.reload();
+  };
 
   if (rapidFireRef.current) {
     activePowerUps.push({
@@ -3855,12 +3876,14 @@ function Game() {
         <div className="game-stats">
 
           <span>
-            WAVE {wave}
+            SECTOR {campaignLevel}
           </span>
 
           <span>
-            LEVEL {level}
+            WAVE {wave} / 5
           </span>
+
+          <span>PILOT LVL {level}</span>
 
           <span>
             SCORE {score}
@@ -4011,11 +4034,11 @@ function Game() {
         </div>
       )}
 
-      {wave >= 5 && !victory && enemiesRef.current[0]?.type === "boss" && (
+      {wave >= 5 && !victory && enemiesRef.current.some((enemy) => enemy.type === "boss") && (
         <div style={{ width: "min(720px, 90vw)", margin: "8px auto 10px", textAlign: "center" }}>
           <div style={{ color: "#ff0055", fontWeight: "900", letterSpacing: "4px", fontSize: "13px", marginBottom: "5px", textShadow: "0 0 12px #ff0055" }}>⚠ FINAL BOSS ⚠</div>
           <div style={{ height: "12px", background: "#080808", border: "1px solid #ff0055", boxShadow: "0 0 12px rgba(255,0,85,.35)" }}>
-            <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, ((enemiesRef.current[0]?.health || 0) / (enemiesRef.current[0]?.maxHealth || 1)) * 100))}%`, background: "#ff0055", boxShadow: "0 0 14px #ff0055" }} />
+            <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, ((enemiesRef.current.find((enemy) => enemy.type === "boss")?.health || 0) / (enemiesRef.current.find((enemy) => enemy.type === "boss")?.maxHealth || 1)) * 100))}%`, background: "#ff0055", boxShadow: "0 0 14px #ff0055" }} />
           </div>
         </div>
       )}
@@ -4321,8 +4344,8 @@ function Game() {
       {victory && (
         <div className="game-overlay">
           <div className="overlay-box leaderboard-submit-box">
-            <h1 style={{ color: "#00ff88", textShadow: "0 0 18px #00ff88" }}>🏆 VICTORY!</h1>
-            <p>FINAL BOSS DEFEATED</p>
+            <h1 style={{ color: "#00ff88", textShadow: "0 0 18px #00ff88" }}>🏆 SECTOR CLEARED!</h1>
+            <p>ALL SECTOR ENEMIES DEFEATED</p>
             <p>Score: {score}</p>
             <p>Level: {level}</p>
             <p>SECTOR {campaignLevel} CLEARED</p>
@@ -4358,9 +4381,9 @@ function Game() {
                 VIEW LEADERBOARD
               </Link>
               {!isGuest && (
-                <Link className="restart-button leaderboard-link-button" to="/career">
-                  NEXT SECTOR / CAREER
-                </Link>
+                <button className="restart-button leaderboard-link-button" onClick={deployNextSector}>
+                  {runMode === "campaign" ? `DEPLOY SECTOR ${campaignLevel + 1}` : "RUN THIS SECTOR AGAIN"}
+                </button>
               )}
               <button className="restart-button" onClick={restartGame}>PLAY AGAIN</button>
             </div>

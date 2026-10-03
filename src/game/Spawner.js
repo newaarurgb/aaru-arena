@@ -74,7 +74,7 @@ class Spawner {
     const safeRadius = 220 + Math.min(500, safeWave * 25 + sector * 8);
     const spawnMultiplier = difficulty === "difficult" ? 1.8 : difficulty === "hard" ? 1.25 : 1;
     const count = Math.min(
-      600,
+      30,
       Math.ceil((5 + (safeWave - 1) * 2 + Math.floor((sector - 1) * 1.5)) * spawnMultiplier)
     );
 
