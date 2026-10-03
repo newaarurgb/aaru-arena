@@ -21,6 +21,12 @@ class Projectile {
     this.radius = 5;
     this.damage = 25;
     this.life = 120;
+    this.color = "#00ffff";
+    this.damageType = "energy";
+    this.pierce = 0;
+    this.slowAmount = 0;
+    this.slowDuration = 0;
+    this.hitEnemies = new Set();
 
     // Visual trail
     this.trail = [];
@@ -60,7 +66,7 @@ class Projectile {
 
       ctx.globalAlpha = alpha;
 
-      ctx.fillStyle = "#00ffff";
+      ctx.fillStyle = this.color;
 
       ctx.beginPath();
 
@@ -83,7 +89,7 @@ class Projectile {
 
     ctx.fillStyle = "#ffffff";
 
-    ctx.shadowColor = "#00ffff";
+    ctx.shadowColor = this.color;
     ctx.shadowBlur = 20;
 
     ctx.beginPath();
@@ -102,7 +108,7 @@ class Projectile {
     // INNER CORE
     // -----------------------------------------
 
-    ctx.fillStyle = "#00ffff";
+    ctx.fillStyle = this.color;
 
     ctx.beginPath();
 

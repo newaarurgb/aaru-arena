@@ -9,12 +9,12 @@ class Enemy {
     this.variantName = `${["ASH", "STORM", "FROST", "VOID", "EMBER", "MOSS", "TIDAL", "CHROME"][((this.sector - 1) % 8)]} ${type.toUpperCase()}-${this.sector}`;
     this.tint = `hsl(${(this.sector * 53 + type.length * 19) % 360} 88% 60%)`;
     this.weakness = ["runner", "charger", "splitter"].includes(type) ? "KINETIC" : "ENERGY";
-    this.shootInterval = Math.max(34, 112 - Math.min(65, this.sector * 1.4));
-    this.shootCooldown = Math.random() * this.shootInterval;
 
     this.hitFlash = 0;
     this.hitTimer = 0;
     this.rotation = 0;
+    this.slowAmount = 0;
+    this.slowTimer = 0;
 
     // Shooter-specific
     this.shootCooldown = 0;
@@ -85,6 +85,8 @@ class Enemy {
     }
 
     const sectorScale = 1 + (this.sector - 1) * 0.11;
+    this.shootInterval = Math.max(60, 150 - Math.min(75, this.sector * 1.5));
+    this.shootCooldown = 90 + Math.random() * this.shootInterval;
     this.maxHealth *= sectorScale;
     this.speed *= 1 + Math.min(0.8, (this.sector - 1) * 0.018);
     this.damage *= 1 + Math.min(2.5, (this.sector - 1) * 0.075);
@@ -102,6 +104,10 @@ class Enemy {
     const dy = playerCenterY - enemyCenterY;
 
     const distance = Math.sqrt(dx * dx + dy * dy);
+    if (this.shootCooldown > 0) this.shootCooldown--;
+    if (this.slowTimer > 0) this.slowTimer--;
+    else this.slowAmount = 0;
+    const movementScale = this.slowTimer > 0 ? 1 - this.slowAmount : 1;
 
     // =========================
     // SHOOTER BEHAVIOR
@@ -121,18 +127,14 @@ class Enemy {
     if (this.type === "shooter" || this.type === "warden") {
       // Move toward player until reaching shooting distance
       if (distance > (this.type === "warden" ? 330 : 280)) {
-        this.x += (dx / distance) * this.speed;
-        this.y += (dy / distance) * this.speed;
+        this.x += (dx / distance) * this.speed * movementScale;
+        this.y += (dy / distance) * this.speed * movementScale;
       }
 
       // Move away if player gets too close
       if (distance < (this.type === "warden" ? 240 : 190) && distance > 0) {
-        this.x -= (dx / distance) * this.speed;
-        this.y -= (dy / distance) * this.speed;
-      }
-
-      if (this.shootCooldown > 0) {
-        this.shootCooldown--;
+        this.x -= (dx / distance) * this.speed * movementScale;
+        this.y -= (dy / distance) * this.speed * movementScale;
       }
     } else {
       // =========================
@@ -143,8 +145,8 @@ class Enemy {
         const movementSpeed = this.type === "charger" && this.chargeTimer > 0
           ? this.speed * 2.8
           : this.speed;
-        this.x += (dx / distance) * movementSpeed;
-        this.y += (dy / distance) * movementSpeed;
+        this.x += (dx / distance) * movementSpeed * movementScale;
+        this.y += (dy / distance) * movementSpeed * movementScale;
       }
     }
 
@@ -196,11 +198,15 @@ class Enemy {
     let angles = [angle];
 
     if (this.type === "tank") {
-      angles = Array.from({ length: 8 }, (_, index) => index * Math.PI / 4);
+      angles = Array.from({ length: 6 }, (_, index) => index * Math.PI / 3);
     } else if (this.type === "warden") {
       angles = [-2, -1, 0, 1, 2].map((offset) => angle + offset * 0.2);
     } else if (this.type === "runner" || this.type === "splitter") {
       angles = [angle - 0.16, angle, angle + 0.16];
+    } else if (this.type === "shooter") {
+      angles = [angle - 0.045, angle + 0.045];
+    } else if (this.type === "charger" && this.chargeTimer > 0) {
+      angles = [-2, -1, 0, 1, 2].map((offset) => angle + offset * 0.16);
     }
 
     return angles.map((shotAngle) => ({
@@ -212,6 +218,7 @@ class Enemy {
       damage: this.damage * 0.55,
       life: 190,
       color: this.tint,
+      pattern: this.type,
     }));
   }
 

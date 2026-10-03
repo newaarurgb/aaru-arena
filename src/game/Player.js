@@ -12,8 +12,8 @@ class Player {
     this.fighterId = fighterId;
     this.speed = fighter.speed;
 
-    this.health = fighter.health;
-    this.maxHealth = fighter.health;
+    this.health = Math.max(100, fighter.health);
+    this.maxHealth = Math.max(100, fighter.health);
 
     this.damageCooldown = false;
 
@@ -26,6 +26,15 @@ class Player {
     // Attack settings
     this.attackRange = 75;
     this.attackDamage = fighter.damage;
+    this.weapon = fighter.weapon;
+    this.weaponDetail = fighter.weaponDetail;
+    this.weaponMode = fighter.weaponMode;
+    this.fireRate = fighter.fireRate;
+    this.projectileSpeed = fighter.projectileSpeed;
+    this.projectileSize = fighter.projectileSize;
+    this.projectileType = ["striker", "bulwark", "ranger"].includes(fighterId)
+      ? "kinetic"
+      : "energy";
   }
 
   move(keys, canvas) {

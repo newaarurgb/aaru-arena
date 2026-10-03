@@ -13,7 +13,7 @@ import Progression from "../game/Progression";
 import Projectile from "../game/Projectile";
 import PowerUp from "../game/PowerUp";
 import { ENVIRONMENTS, PLAYER_DESIGNS } from "../data/loadouts";
-import { readCareerProgress, recordEnemyDefeat, recordRunResult, recordWaveClear } from "../data/career";
+import { FIGHTERS, readCareerProgress, recordEnemyDefeat, recordRunResult, recordWaveClear } from "../data/career";
 
 const DIFFICULTIES = {
   easy: {
@@ -41,6 +41,16 @@ const DIFFICULTIES = {
     healthDropChance: 0.55,
   },
 };
+
+const ENEMY_FIELD_GUIDE = [
+  { type: "grunt", name: "GRUNT", power: "Aimed single energy bolt", weakness: "ENERGY", counter: "Use the Pulse Cannon or Cryo Lance." },
+  { type: "runner", name: "RUNNER", power: "Fast triple shots", weakness: "KINETIC", counter: "Use Striker spread, Siege shells, or Piercer rounds." },
+  { type: "tank", name: "TANK", power: "Slow six-way radial bursts", weakness: "ENERGY", counter: "Dodge the ring, then return energy fire." },
+  { type: "shooter", name: "SHOOTER", power: "Long-range paired aimed shots", weakness: "ENERGY", counter: "Close the gap or use the piercing rifle." },
+  { type: "charger", name: "CHARGER", power: "Telegraphed dash and five-shot fan", weakness: "KINETIC", counter: "Bait the dash, then fire a kinetic weapon." },
+  { type: "warden", name: "WARDEN", power: "Five-lane spread", weakness: "ENERGY", counter: "Break its line and use energy shots." },
+  { type: "splitter", name: "SPLITTER", power: "Three-shot burst; splits into runners", weakness: "KINETIC", counter: "Hit it with kinetic damage before it divides." },
+];
 
 class BossEnemy {
   constructor(x, y, sector = 1, variantIndex = 0) {
@@ -285,6 +295,7 @@ function Game() {
 
   const [gameStarted, setGameStarted] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [showCombatBriefing, setShowCombatBriefing] = useState(false);
   const gameMode = "solo";
   const [difficulty, setDifficulty] = useState("hard");
   const [environment, setEnvironment] = useState(
@@ -820,6 +831,8 @@ function Game() {
 
     if (gameMode === "solo") {
       setGameStarted(true);
+      setPaused(true);
+      setShowCombatBriefing(true);
       return;
     }
 
@@ -1429,11 +1442,17 @@ function Game() {
           );
 
         if (
+          !projectile.hitEnemies.has(enemy) &&
           distance <
           enemy.width / 2 +
             projectile.radius
         ) {
-          const dead = enemy.takeDamage(projectile.damage, "energy");
+          const dead = enemy.takeDamage(projectile.damage, projectile.damageType);
+
+          if (projectile.slowAmount > 0 && !dead) {
+            enemy.slowAmount = Math.max(enemy.slowAmount || 0, projectile.slowAmount);
+            enemy.slowTimer = Math.max(enemy.slowTimer || 0, projectile.slowDuration);
+          }
 
           createHitEffect(
             enemyCenterX,
@@ -1477,12 +1496,14 @@ function Game() {
           // REMOVE PROJECTILE
           // -----------------------------------------------
 
-          projectilesRef.current.splice(
-            p,
-            1
-          );
-
+          projectile.hitEnemies.add(enemy);
           projectileHit = true;
+
+          if (projectile.pierce > 0 && !dead) {
+            projectile.pierce--;
+          } else {
+            projectilesRef.current.splice(p, 1);
+          }
 
           break;
         }
@@ -1898,11 +1919,16 @@ function Game() {
         // NORMAL CONTACT DAMAGE
         // ===================================================
 
-        const damage = enemy.damage || 10;
+        const damage = Math.min(5, Math.max(3, (enemy.damage || 10) * 0.18));
 
         currentPlayer.health -= damage;
-        enemy.hitTimer = 45;
-        playerDamageCooldownRef.current = 45;
+        enemy.hitTimer = 150;
+        playerDamageCooldownRef.current = 150;
+
+        if (distance > 0) {
+          enemy.x += (dx / distance) * 42;
+          enemy.y += (dy / distance) * 42;
+        }
 
         setHealth(
           Math.max(0, currentPlayer.health)
@@ -2653,12 +2679,14 @@ function Game() {
       if (gameOver || victory || waveClearedRef.current || levelUpRef.current) return;
 
       const now = performance.now();
-      const shotCooldown = rapidFireRef.current ? 90 : 250;
-
-      if (now - lastShotRef.current < shotCooldown) return;
-
       const currentPlayer = playerRef.current;
       if (!currentPlayer) return;
+
+      const shotCooldown = rapidFireRef.current
+        ? Math.min(90, currentPlayer.fireRate)
+        : currentPlayer.fireRate;
+
+      if (now - lastShotRef.current < shotCooldown) return;
 
       let damage = Number(currentPlayer.attackDamage || 25);
 
@@ -2681,6 +2709,16 @@ function Game() {
       const speed = 9;
       const velocityX = (dx / distance) * speed;
       const velocityY = (dy / distance) * speed;
+      const aimAngle = Math.atan2(velocityY, velocityX);
+      const weaponMode = currentPlayer.weaponMode || "single";
+      const shotAngles = weaponMode === "spread"
+        ? [-0.2, 0, 0.2].map((offset) => aimAngle + offset)
+        : weaponMode === "rapid-pair"
+          ? [-0.08, 0.08].map((offset) => aimAngle + offset)
+          : [aimAngle];
+      const shotDamage = weaponMode === "spread" || weaponMode === "rapid-pair"
+        ? damage * 0.62
+        : damage;
 
       lastShotRef.current = now;
 
@@ -2700,8 +2738,8 @@ function Game() {
                   y: startY,
                   velocityX,
                   velocityY,
-                  radius: 5,
-                  damage,
+                  radius: currentPlayer.projectileSize,
+                  damage: shotDamage,
                   life: 180,
                 },
               },
@@ -2712,16 +2750,36 @@ function Game() {
         return;
       }
 
-      const projectile = new Projectile(
-        startX,
-        startY,
-        targetX,
-        targetY
-      );
-
-      projectile.damage = damage;
-
-      projectilesRef.current.push(projectile);
+      shotAngles.forEach((shotAngle) => {
+        const projectile = new Projectile(
+          startX,
+          startY,
+          startX + Math.cos(shotAngle),
+          startY + Math.sin(shotAngle)
+        );
+        const projectileSpeed = currentPlayer.projectileSpeed;
+        projectile.velocityX = Math.cos(shotAngle) * projectileSpeed;
+        projectile.velocityY = Math.sin(shotAngle) * projectileSpeed;
+        projectile.radius = currentPlayer.projectileSize;
+        projectile.damage = shotDamage;
+        projectile.damageType = currentPlayer.projectileType;
+        projectile.color = weaponMode === "heavy"
+          ? "#ffad58"
+          : weaponMode === "piercing"
+            ? "#9cff63"
+            : weaponMode === "cryo"
+              ? "#7eeaff"
+              : weaponMode === "rapid-pair"
+                ? "#d28aff"
+                : weaponMode === "spread"
+                  ? "#ffcb61"
+                  : "#00ffff";
+        projectile.pierce = weaponMode === "piercing" ? 3 : 0;
+        projectile.slowAmount = weaponMode === "cryo" ? 0.55 : 0;
+        projectile.slowDuration = weaponMode === "cryo" ? 90 : 0;
+        if (weaponMode === "heavy") projectile.life = 145;
+        projectilesRef.current.push(projectile);
+      });
     }
 
     // ===================================================
@@ -3549,6 +3607,7 @@ function Game() {
     pendingStartRef.current = false;
 
     setGameStarted(false);
+    setShowCombatBriefing(false);
     sessionStorage.removeItem("aaruMultiplayerStarted");
     sessionStorage.removeItem("aaruMultiplayerRoom");
     sessionStorage.removeItem("aaruMultiplayerName");
@@ -3736,6 +3795,41 @@ function Game() {
               </Link>
             )}
           </div>
+        </div>
+      )}
+
+      {showCombatBriefing && (
+        <div className="game-overlay combat-briefing-overlay">
+          <section className="combat-briefing-panel">
+            <p className="multiplayer-kicker">SECTOR {campaignLevel} // COMBAT INTEL</p>
+            <h1>KNOW YOUR TARGETS</h1>
+            <div className="briefing-hero">
+              <span>YOUR HERO // {FIGHTERS[fighterId]?.name || "VANGUARD"}</span>
+              <strong>{FIGHTERS[fighterId]?.weapon || "PULSE CANNON"}</strong>
+              <small>{FIGHTERS[fighterId]?.weaponDetail || "Balanced single energy bolts"} // {playerRef.current?.maxHealth || FIGHTERS[fighterId]?.health || 100} HP</small>
+            </div>
+            <div className="briefing-enemy-grid">
+              {ENEMY_FIELD_GUIDE.map((enemy) => (
+                <article className="briefing-enemy" key={enemy.type}>
+                  <strong>{enemy.name}</strong>
+                  <span>{enemy.power}</span>
+                  <b>WEAK TO {enemy.weakness}</b>
+                  <small>{enemy.counter}</small>
+                </article>
+              ))}
+            </div>
+            <p className="briefing-tip">CONTACT HITS ARE REDUCED. MOVE BETWEEN ATTACKS; MATCH ENERGY OR KINETIC DAMAGE TO THE TARGET.</p>
+            <button
+              className="career-primary briefing-continue"
+              type="button"
+              onClick={() => {
+                setShowCombatBriefing(false);
+                setPaused(false);
+              }}
+            >
+              ENTER THE ARENA <span>→</span>
+            </button>
+          </section>
         </div>
       )}
 

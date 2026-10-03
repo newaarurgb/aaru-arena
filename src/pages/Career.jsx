@@ -149,6 +149,8 @@ function Career() {
                 <strong>{fighter.name}</strong>
                 <small>{fighter.title}</small>
                 <span className="pilot-stats">HP {fighter.health} <i /> SPD {fighter.speed} <i /> DMG {fighter.damage}</span>
+                <span className="pilot-weapon">{fighter.weapon}</span>
+                <small>{fighter.weaponDetail}</small>
                 <em>{fighter.unlocked ? selectedFighter === fighter.id ? "SELECTED" : "SELECT PILOT" : fighter.unlockText}</em>
               </button>
             ))}
